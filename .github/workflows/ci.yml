@@ -1,0 +1,116 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * 0"
+
+permissions:
+  contents: read
+
+jobs:
+  linux-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select compiler
+        run: |
+          if [ "${{ matrix.compiler }}" = clang ]; then
+            echo "CC=clang" >> "$GITHUB_ENV"
+            echo "CXX=clang++" >> "$GITHUB_ENV"
+          else
+            echo "CC=gcc" >> "$GITHUB_ENV"
+            echo "CXX=g++" >> "$GITHUB_ENV"
+          fi
+      - name: Configure
+        run: cmake --preset debug
+      - name: Build
+        run: cmake --build --preset debug --parallel 2
+      - name: Test
+        run: ctest --preset debug
+
+  asan-ubsan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake --preset asan-ubsan
+      - run: cmake --build --preset asan-ubsan --parallel 2
+      - run: ctest --preset asan-ubsan
+
+  tsan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake --preset tsan
+      - run: cmake --build --preset tsan --parallel 2
+      - run: ctest --preset tsan
+
+  fuzz-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure instrumented fuzz targets
+        run: >-
+          cmake -S . -B build/fuzz -G Ninja
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          -DBUILD_TESTING=OFF
+          -DDETLOG_BUILD_APPS=OFF
+          -DDETLOG_BUILD_BENCHMARKS=OFF
+          -DDETLOG_BUILD_FUZZERS=ON
+      - name: Build fuzz targets
+        run: >-
+          cmake --build build/fuzz --parallel 2 --target
+          detlog-codec-fuzz detlog-wal-fuzz detlog-scenario-fuzz
+      - name: Run bounded parser campaigns
+        run: |
+          ./build/fuzz/detlog-codec-fuzz -runs=1000 -max_len=4096
+          ./build/fuzz/detlog-wal-fuzz -runs=1000 -max_len=4096
+          ./build/fuzz/detlog-scenario-fuzz -runs=20 -max_len=64
+
+  windows-build:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build/windows -G Ninja -DCMAKE_BUILD_TYPE=Debug
+      - name: Build
+        run: cmake --build build/windows --parallel 2
+      - name: Test
+        run: ctest --test-dir build/windows --output-on-failure
+
+  long-property-campaign:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      CC: clang
+      CXX: clang++
+      DETLOG_PROPERTY_SEEDS: 2000
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake --preset release -DDETLOG_BUILD_BENCHMARKS=OFF
+      - name: Build property harness
+        run: cmake --build --preset release --target property_tests --parallel 2
+      - name: Run deterministic campaign
+        run: ./build/release/property_tests
