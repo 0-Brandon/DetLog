@@ -25,7 +25,21 @@ struct NodeHostLimits {
   std::size_t max_trace_records{4096};
   std::size_t max_storage_tasks{16};
   std::size_t max_storage_completions{16};
+  std::size_t max_group_quarantined_effects{4096};
   std::size_t max_tcp_events_per_poll{128};
+};
+
+// Safe group commit is an explicit runtime policy layered above the WAL. When
+// enabled, NodeHost may stage several WAL frames without flushing, but it does
+// not expose any persistence-dependent Raft effect until one shared durability
+// barrier succeeds. A batch that advances commit_index is never completed to
+// Raft before that barrier, so state-machine apply also remains post-durable.
+// The operation and delay limits bound both the batch size and acknowledgement
+// latency. The default preserves one flush per append.
+struct NodeHostGroupCommitConfig {
+  bool enabled{};
+  std::size_t max_operations{8};
+  std::chrono::milliseconds max_delay{2};
 };
 
 struct NodeHostConfig {
@@ -40,6 +54,7 @@ struct NodeHostConfig {
   std::uint64_t timer_seed{1};
   std::chrono::milliseconds idle_sleep{1};
   NodeHostLimits limits;
+  NodeHostGroupCommitConfig group_commit;
 };
 
 struct NodeHostMetrics {
@@ -54,6 +69,18 @@ struct NodeHostMetrics {
   std::uint64_t storage_submitted{};
   std::uint64_t storage_completed{};
   std::uint64_t storage_errors{};
+  // Physical durability barriers issued by the runtime. This is zero for the
+  // explicitly unsafe WAL policy.
+  std::uint64_t storage_flushes{};
+  // Shared barriers used by the safe group-commit policy. Operations counts
+  // frames made durable by those barriers, including size-one timeout groups.
+  std::uint64_t storage_group_commits{};
+  std::uint64_t storage_grouped_operations{};
+  std::uint64_t storage_staged_operations{};
+  std::size_t storage_group_max_size{};
+  std::size_t storage_group_max_bytes{};
+  std::size_t storage_task_queue_high_water{};
+  std::size_t storage_quarantine_high_water{};
   std::uint64_t clients_submitted{};
   std::uint64_t client_replies{};
   std::uint64_t client_submit_backpressure{};
@@ -113,6 +140,11 @@ class NodeHost final {
       std::size_t maximum = 1024);
   [[nodiscard]] std::vector<TraceRecord> poll_traces(
       std::size_t maximum = 1024);
+
+  // Benchmark/test fault control for one directed real-TCP link. Call both
+  // endpoints to model a bidirectional partition.
+  [[nodiscard]] bool set_peer_partitioned(NodeId peer,
+                                          bool partitioned) noexcept;
 
   [[nodiscard]] bool running() const noexcept;
   [[nodiscard]] std::uint16_t listening_port() const;

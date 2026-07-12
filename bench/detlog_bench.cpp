@@ -50,6 +50,10 @@ struct Options {
   std::size_t operations{100};
   std::uint64_t trial{1};
   std::uint64_t seed{1};
+  std::string fsync_policy{"flush-every"};
+  std::size_t group_size{5};
+  std::uint64_t group_delay_ms{2};
+  std::uint64_t partition_ms{1000};
 };
 
 struct OperationRecord {
@@ -75,6 +79,7 @@ struct RunSummary {
   std::uint64_t wall_duration_ns{};
   std::vector<std::uint64_t> successful_latencies;
   std::optional<std::uint64_t> fault_at;
+  std::optional<std::uint64_t> fault_duration;
   std::optional<std::uint64_t> replacement_leader_ready_duration;
   std::optional<std::uint64_t> recovery_to_first_success;
   std::optional<std::uint64_t> process_cpu_ns;
@@ -84,6 +89,14 @@ struct RunSummary {
   std::uint64_t transport_backpressure{};
   std::uint64_t transport_down_drops{};
   std::uint64_t storage_errors{};
+  std::uint64_t storage_flushes{};
+  std::uint64_t storage_group_commits{};
+  std::uint64_t storage_grouped_operations{};
+  std::uint64_t storage_staged_operations{};
+  std::size_t storage_group_max_size{};
+  std::size_t storage_group_max_bytes{};
+  std::size_t storage_task_queue_high_water{};
+  std::size_t storage_quarantine_high_water{};
   std::size_t owner_queue_high_water{};
   std::size_t client_queue_high_water{};
   std::size_t sim_event_queue_high_water{};
@@ -108,7 +121,9 @@ void print_usage(std::ostream& output) {
       << "usage: detlog-bench [--mode sim|tcp] [--nodes 3|5] "
          "[--clients 1|3|5] [--payload 64|1024|16384] [--operations N] "
          "[--trial N] [--seed N] "
-         "[--scenario healthy|leader-crash|partition|slow-follower|slow-fsync]\n";
+         "[--scenario healthy|leader-crash|partition|slow-follower|slow-fsync] "
+         "[--fsync-policy flush-every|group] [--group-size N] "
+         "[--group-delay-ms N] [--partition-ms N]\n";
 }
 
 [[nodiscard]] Options parse_options(int argc, char** argv) {
@@ -142,6 +157,15 @@ void print_usage(std::ostream& output) {
       options.seed = parse_unsigned(value, argument);
     } else if (argument == "--scenario") {
       options.scenario = value;
+    } else if (argument == "--fsync-policy") {
+      options.fsync_policy = value;
+    } else if (argument == "--group-size") {
+      options.group_size =
+          static_cast<std::size_t>(parse_unsigned(value, argument));
+    } else if (argument == "--group-delay-ms") {
+      options.group_delay_ms = parse_unsigned(value, argument);
+    } else if (argument == "--partition-ms") {
+      options.partition_ms = parse_unsigned(value, argument);
     } else {
       throw std::invalid_argument("unknown option: " + std::string(argument));
     }
@@ -151,13 +175,22 @@ void print_usage(std::ostream& output) {
       options.scenario == "partition" ||
       options.scenario == "slow-follower" ||
       options.scenario == "slow-fsync";
+  const bool under_load_fault = options.scenario == "leader-crash" ||
+                                options.scenario == "partition";
   if ((options.mode != "sim" && options.mode != "tcp") ||
       (options.nodes != 3 && options.nodes != 5) ||
       (options.clients != 1 && options.clients != 3 && options.clients != 5) ||
       (options.payload != 64 && options.payload != 1024 &&
        options.payload != 16384) ||
       options.operations == 0 || options.operations > 1'000'000U ||
-      !known_scenario) {
+      !known_scenario ||
+      (options.fsync_policy != "flush-every" &&
+       options.fsync_policy != "group") ||
+      options.group_size < 2 || options.group_size > 1024U ||
+      options.group_delay_ms == 0 || options.group_delay_ms > 1000U ||
+      options.partition_ms == 0 || options.partition_ms > 60'000U ||
+      (under_load_fault && options.operations <= options.clients) ||
+      (options.mode == "sim" && options.fsync_policy != "flush-every")) {
     throw std::invalid_argument("benchmark option is outside the supported matrix");
   }
   return options;
@@ -330,12 +363,17 @@ void emit_manifest(std::ostream& output, const Options& options,
          << ",\"node_execution\":";
   json_string(output, options.mode == "tcp" ? "same_process_real_loopback_tcp"
                                              : "single_threaded_simulation");
-  output << ",\"wal_flush_policy\":\"flush_every_append\""
+  output << ",\"wal_flush_policy\":";
+  json_string(output, options.mode == "sim" ? "simulated_flush_every"
+                                             : options.fsync_policy);
+  output << ",\"wal_group_size\":" << options.group_size
+         << ",\"wal_group_delay_ms\":" << options.group_delay_ms
+         << ",\"tcp_partition_ms\":" << options.partition_ms
          << ",\"sim_network_delay_ticks\":1"
          << ",\"sim_storage_write_ticks\":1"
          << ",\"sim_storage_flush_ticks\":"
          << (options.scenario == "slow-fsync" ? 20 : 1)
-         << ",\"sim_slow_link_ticks\":15,\"sim_partition_ticks\":50"
+         << ",\"sim_slow_link_ticks\":15,\"sim_partition_ticks\":150"
          << ",\"build_commit\":";
   json_string(output, environment_value("DETLOG_BUILD_COMMIT"));
   output << ",\"build_flags\":";
@@ -436,7 +474,21 @@ void emit_summary(std::ostream& output, const Options& options,
          << ",\"transport_backpressure\":"
          << summary.transport_backpressure << ",\"transport_down_drops\":"
          << summary.transport_down_drops << ",\"storage_errors\":"
-         << summary.storage_errors << ",\"owner_queue_high_water\":"
+         << summary.storage_errors << ",\"storage_flushes\":"
+         << summary.storage_flushes << ",\"storage_group_commits\":"
+         << summary.storage_group_commits
+         << ",\"storage_grouped_operations\":"
+         << summary.storage_grouped_operations
+         << ",\"storage_staged_operations\":"
+         << summary.storage_staged_operations
+         << ",\"storage_group_max_size\":" << summary.storage_group_max_size
+         << ",\"storage_group_max_bytes\":"
+         << summary.storage_group_max_bytes
+         << ",\"storage_task_queue_high_water\":"
+         << summary.storage_task_queue_high_water
+         << ",\"storage_quarantine_high_water\":"
+         << summary.storage_quarantine_high_water
+         << ",\"owner_queue_high_water\":"
          << summary.owner_queue_high_water
          << ",\"client_queue_high_water\":"
          << summary.client_queue_high_water
@@ -458,6 +510,12 @@ void emit_summary(std::ostream& output, const Options& options,
   output << ",\"replacement_leader_ready_duration\":";
   if (summary.replacement_leader_ready_duration) {
     output << *summary.replacement_leader_ready_duration;
+  } else {
+    output << "null";
+  }
+  output << ",\"fault_duration\":";
+  if (summary.fault_duration) {
+    output << *summary.fault_duration;
   } else {
     output << "null";
   }
@@ -494,6 +552,21 @@ struct SimClient {
   std::uint64_t next_sequence{1};
   std::optional<SimOperation> operation;
 };
+
+[[nodiscard]] std::optional<detlog::NodeId> ready_sim_leader(
+    const detlog::DeterministicCluster& cluster) {
+  std::optional<std::pair<detlog::Term, detlog::NodeId>> selected;
+  for (const detlog::NodeSnapshot& snapshot : cluster.snapshots()) {
+    if (!snapshot.alive || snapshot.role != detlog::RaftRole::leader ||
+        !snapshot.leader_ready) {
+      continue;
+    }
+    const auto candidate = std::make_pair(snapshot.term, snapshot.id);
+    if (!selected || candidate > *selected) selected = candidate;
+  }
+  return selected ? std::optional<detlog::NodeId>{selected->second}
+                  : std::nullopt;
+}
 
 void abandon_sim_attempts(std::vector<SimClient>& clients,
                           std::map<detlog::ClientToken, std::size_t>& tokens) {
@@ -584,7 +657,7 @@ void abandon_sim_attempts(std::vector<SimClient>& clients,
   detlog::NodeId partitioned_node{};
   std::optional<detlog::NodeId> faulted_leader;
   constexpr detlog::Tick kAttemptTimeout = 500;
-  constexpr detlog::Tick kPartitionTicks = 50;
+  constexpr detlog::Tick kPartitionTicks = 150;
   const std::uint64_t scaled_events =
       options.operations > 5'000U ? 100'000'000ULL
                                   : 100'000ULL +
@@ -593,7 +666,10 @@ void abandon_sim_attempts(std::vector<SimClient>& clients,
                                             20'000ULL;
 
   for (std::uint64_t events = 0;
-       summary.successes < options.operations && events < scaled_events;
+       (summary.successes < options.operations ||
+        (options.scenario == "partition" && fault_injected &&
+         !partition_healed)) &&
+       events < scaled_events;
        ++events) {
     observe_sim_queues();
     for (detlog::ClientReply& reply : cluster.take_replies()) {
@@ -634,6 +710,7 @@ void abandon_sim_attempts(std::vector<SimClient>& clients,
         cluster.now() >= *summary.fault_at + kPartitionTicks) {
       (void)cluster.isolate(partitioned_node, false);
       partition_healed = true;
+      summary.fault_duration = cluster.now() - *summary.fault_at;
     }
 
     for (std::size_t index = 0; index < clients.size(); ++index) {
@@ -658,7 +735,11 @@ void abandon_sim_attempts(std::vector<SimClient>& clients,
         ++operation.record.retries;
       }
       if (!operation.token) {
-        const auto leader = cluster.leader(true);
+        auto leader = ready_sim_leader(cluster);
+        if (options.scenario == "partition" && faulted_leader &&
+            !partition_healed && leader == faulted_leader) {
+          leader.reset();
+        }
         if (leader) {
           const detlog::ClientToken token =
               cluster.submit(*leader, operation.command);
@@ -675,7 +756,7 @@ void abandon_sim_attempts(std::vector<SimClient>& clients,
         summary.successes >= fault_after &&
         (options.scenario == "leader-crash" ||
          options.scenario == "partition")) {
-      const auto leader = cluster.leader(true);
+      const auto leader = ready_sim_leader(cluster);
       if (leader) {
         fault_injected = true;
         summary.fault_at = cluster.now();
@@ -733,12 +814,25 @@ void abandon_sim_attempts(std::vector<SimClient>& clients,
   summary.peak_resident_bytes = peak_resident_bytes();
   summary.elections = observed_leaders.size();
   const detlog::InvariantResult invariant = cluster.check_invariants();
+  const bool fault_exercised =
+      (options.scenario != "leader-crash" && options.scenario != "partition") ||
+      (fault_injected && summary.replacement_leader_ready_duration &&
+       summary.recovery_to_first_success &&
+       (options.scenario != "partition" ||
+        (partition_healed && summary.fault_duration &&
+         *summary.replacement_leader_ready_duration <=
+             *summary.fault_duration &&
+         *summary.recovery_to_first_success <= *summary.fault_duration)));
   summary.safety_check = invariant ? "passed" : "failed";
   if (!invariant) summary.status = "invariant_failure";
-  if (summary.failures != 0 && invariant) summary.status = "bounded_timeout";
+  if (summary.failures != 0 && invariant) {
+    summary.status = "bounded_timeout";
+  } else if (invariant && !fault_exercised) {
+    summary.status = "fault_not_exercised";
+  }
   emit_summary(output, options, summary, "virtual_ticks",
                "ops_per_virtual_tick");
-  return summary.failures == 0 && invariant ? 0 : 1;
+  return summary.failures == 0 && invariant && fault_exercised ? 0 : 1;
 }
 
 class TempDirectory {
@@ -773,7 +867,7 @@ class TempDirectory {
     config.raft.members.push_back(static_cast<detlog::NodeId>(index + 1U));
   }
   config.raft.election_timeout =
-      static_cast<detlog::Tick>(250U + (node - 1U) * 100U);
+      static_cast<detlog::Tick>(75U + (node - 1U) * 100U);
   config.raft.heartbeat_interval = 25;
   const std::uint64_t cluster_high = 0x42454e4348544350ULL ^ options.seed;
   const std::uint64_t cluster_low =
@@ -794,9 +888,14 @@ class TempDirectory {
         detlog::TcpPeerEndpoint{peer, "127.0.0.1", port});
   }
   config.tick_duration = std::chrono::milliseconds(2);
-  config.election_jitter = 50;
+  config.election_jitter = 10;
   config.timer_seed = options.seed + node * 0x10001ULL;
   config.idle_sleep = std::chrono::milliseconds(0);
+  config.group_commit.enabled = options.fsync_policy == "group";
+  config.group_commit.max_operations = options.group_size;
+  config.group_commit.max_delay =
+      std::chrono::milliseconds(
+          static_cast<std::int64_t>(options.group_delay_ms));
   return config;
 }
 
@@ -834,6 +933,31 @@ struct TcpClient {
   return static_cast<std::uint64_t>(
       std::chrono::duration_cast<std::chrono::nanoseconds>(end - start)
           .count());
+}
+
+void merge_runtime_metrics(RunSummary& summary,
+                           const detlog::NodeHostMetrics& metrics) {
+  summary.transport_backpressure += metrics.tcp_backpressure_drops;
+  summary.transport_down_drops += metrics.tcp_down_drops;
+  summary.storage_errors += metrics.storage_errors;
+  summary.storage_flushes += metrics.storage_flushes;
+  summary.storage_group_commits += metrics.storage_group_commits;
+  summary.storage_grouped_operations += metrics.storage_grouped_operations;
+  summary.storage_staged_operations += metrics.storage_staged_operations;
+  summary.storage_group_max_size =
+      std::max(summary.storage_group_max_size, metrics.storage_group_max_size);
+  summary.storage_group_max_bytes = std::max(
+      summary.storage_group_max_bytes, metrics.storage_group_max_bytes);
+  summary.storage_task_queue_high_water = std::max(
+      summary.storage_task_queue_high_water,
+      metrics.storage_task_queue_high_water);
+  summary.storage_quarantine_high_water = std::max(
+      summary.storage_quarantine_high_water,
+      metrics.storage_quarantine_high_water);
+  summary.owner_queue_high_water =
+      std::max(summary.owner_queue_high_water, metrics.owner_queue_high_water);
+  summary.client_queue_high_water = std::max(
+      summary.client_queue_high_water, metrics.client_queue_high_water);
 }
 
 [[nodiscard]] int run_tcp(const Options& options, std::ostream& output) {
@@ -898,7 +1022,9 @@ struct TcpClient {
       options.operations > 1 ? std::max<std::size_t>(1, options.operations / 3U)
                              : 0;
   bool fault_injected = false;
+  bool partition_healed = false;
   std::optional<detlog::NodeId> faulted_leader;
+  std::optional<Clock::time_point> partition_heal_at;
   detlog::NodeHostMetrics crashed_metrics;
   const std::uint64_t timeout_scale =
       std::min<std::uint64_t>(300'000ULL,
@@ -909,7 +1035,35 @@ struct TcpClient {
                         std::chrono::milliseconds(timeout_scale);
   constexpr auto kAttemptTimeout = std::chrono::seconds(2);
 
-  while (summary.successes < options.operations && Clock::now() < deadline) {
+  const auto set_isolated = [&](detlog::NodeId isolated, bool partitioned) {
+    bool changed = true;
+    const std::size_t isolated_index =
+        static_cast<std::size_t>(isolated - 1U);
+    if (!hosts[isolated_index]) return false;
+    for (std::size_t index = 0; index < hosts.size(); ++index) {
+      const detlog::NodeId peer = static_cast<detlog::NodeId>(index + 1U);
+      if (peer == isolated || !hosts[index]) continue;
+      changed = hosts[isolated_index]->set_peer_partitioned(peer, partitioned) &&
+                changed;
+      changed = hosts[index]->set_peer_partitioned(isolated, partitioned) &&
+                changed;
+    }
+    return changed;
+  };
+
+  while ((summary.successes < options.operations ||
+          (options.scenario == "partition" && fault_injected &&
+           !partition_healed)) &&
+         Clock::now() < deadline) {
+    if (partition_heal_at && !partition_healed &&
+        Clock::now() >= *partition_heal_at) {
+      if (!faulted_leader || !set_isolated(*faulted_leader, false)) {
+        throw std::runtime_error("failed to heal TCP benchmark partition");
+      }
+      partition_healed = true;
+      summary.fault_duration =
+          elapsed_ns(benchmark_start, Clock::now()) - *summary.fault_at;
+    }
     bool activity = false;
     for (std::size_t node_index = 0; node_index < hosts.size(); ++node_index) {
       auto& host = hosts[node_index];
@@ -991,7 +1145,11 @@ struct TcpClient {
         operation.retry_after = now;
       }
       if (operation.token || now < operation.retry_after) continue;
-      const auto leader = ready_tcp_leader(hosts);
+      auto leader = ready_tcp_leader(hosts);
+      if (options.scenario == "partition" && faulted_leader &&
+          !partition_healed && leader == faulted_leader) {
+        leader.reset();
+      }
       if (!leader) continue;
       const std::size_t leader_index = static_cast<std::size_t>(*leader - 1U);
       if (!hosts[leader_index]) continue;
@@ -1013,16 +1171,14 @@ struct TcpClient {
     }
     if (!fault_injected && fault_after != 0 &&
         summary.successes >= fault_after &&
-        options.scenario == "leader-crash") {
+        (options.scenario == "leader-crash" ||
+         options.scenario == "partition")) {
       const auto leader = ready_tcp_leader(hosts);
       if (leader) {
         fault_injected = true;
         summary.fault_at = elapsed_ns(benchmark_start, Clock::now());
         faulted_leader = *leader;
         const std::size_t dead_index = static_cast<std::size_t>(*leader - 1U);
-        crashed_metrics = hosts[dead_index]->metrics();
-        hosts[dead_index]->stop();
-        hosts[dead_index].reset();
         for (TcpClient& client : clients) {
           if (client.operation && client.operation->token &&
               client.operation->attempt_node == *leader) {
@@ -1031,6 +1187,19 @@ struct TcpClient {
             ++client.operation->record.retries;
             client.operation->retry_after = Clock::now();
           }
+        }
+        if (options.scenario == "leader-crash") {
+          crashed_metrics = hosts[dead_index]->metrics();
+          hosts[dead_index]->stop();
+          hosts[dead_index].reset();
+        } else {
+          if (!set_isolated(*leader, true)) {
+            throw std::runtime_error("failed to inject TCP benchmark partition");
+          }
+          partition_heal_at =
+              Clock::now() + std::chrono::milliseconds(
+                                 static_cast<std::int64_t>(
+                                     options.partition_ms));
         }
       }
     }
@@ -1066,29 +1235,26 @@ struct TcpClient {
   for (const auto& host : hosts) {
     if (!host) continue;
     const detlog::NodeHostMetrics metrics = host->metrics();
-    summary.transport_backpressure += metrics.tcp_backpressure_drops;
-    summary.transport_down_drops += metrics.tcp_down_drops;
-    summary.storage_errors += metrics.storage_errors;
-    summary.owner_queue_high_water =
-        std::max(summary.owner_queue_high_water,
-                 metrics.owner_queue_high_water);
-    summary.client_queue_high_water =
-        std::max(summary.client_queue_high_water,
-                 metrics.client_queue_high_water);
+    merge_runtime_metrics(summary, metrics);
     host->stop();
   }
-  summary.transport_backpressure += crashed_metrics.tcp_backpressure_drops;
-  summary.transport_down_drops += crashed_metrics.tcp_down_drops;
-  summary.storage_errors += crashed_metrics.storage_errors;
-  summary.owner_queue_high_water =
-      std::max(summary.owner_queue_high_water,
-               crashed_metrics.owner_queue_high_water);
-  summary.client_queue_high_water =
-      std::max(summary.client_queue_high_water,
-               crashed_metrics.client_queue_high_water);
-  if (summary.failures != 0) summary.status = "bounded_timeout";
+  merge_runtime_metrics(summary, crashed_metrics);
+  const bool fault_exercised =
+      (options.scenario != "leader-crash" && options.scenario != "partition") ||
+      (fault_injected && summary.replacement_leader_ready_duration &&
+       summary.recovery_to_first_success &&
+       (options.scenario != "partition" ||
+        (partition_healed && summary.fault_duration &&
+         *summary.replacement_leader_ready_duration <=
+             *summary.fault_duration &&
+         *summary.recovery_to_first_success <= *summary.fault_duration)));
+  if (summary.failures != 0) {
+    summary.status = "bounded_timeout";
+  } else if (!fault_exercised) {
+    summary.status = "fault_not_exercised";
+  }
   emit_summary(output, options, summary, "nanoseconds", "ops_per_second");
-  return summary.failures == 0 ? 0 : 1;
+  return summary.failures == 0 && fault_exercised ? 0 : 1;
 }
 
 }  // namespace
@@ -1096,12 +1262,13 @@ struct TcpClient {
 int main(int argc, char** argv) {
   try {
     const Options options = parse_options(argc, argv);
-    const bool tcp_supported =
-        options.scenario == "healthy" || options.scenario == "leader-crash";
+    const bool tcp_supported = options.scenario == "healthy" ||
+                               options.scenario == "leader-crash" ||
+                               options.scenario == "partition";
     if (options.mode == "tcp" && !tcp_supported) {
       const std::string reason =
-          "tcp mode supports healthy and leader-crash only; deterministic "
-          "partition, slow-follower, and slow-fsync controls exist only in sim mode";
+          "tcp mode supports healthy, leader-crash, and a real timed partition; "
+          "slow-follower and slow-fsync controls exist only in sim mode";
       emit_manifest(std::cout, options, false, reason);
       std::cout << "{\"record\":\"unsupported\",\"mode\":\"tcp\",\"scenario\":";
       json_string(std::cout, options.scenario);

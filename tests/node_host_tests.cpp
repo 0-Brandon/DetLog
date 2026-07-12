@@ -132,11 +132,14 @@ void test_three_host_runtime_recovery_and_dedup() {
   std::array<NodeHostConfig, 3> configs;
   std::array<std::unique_ptr<NodeHost>, 3> hosts;
 
+  // This is a wall-clock TCP/fsync integration test. Keep election windows
+  // comfortably above ordinary Windows scheduler and flush variance while
+  // retaining a deterministic stagger between the three nodes.
   configs[0] = host_config(
       1, directory.wal(1),
       {TcpPeerEndpoint{2, "127.0.0.1", 0},
        TcpPeerEndpoint{3, "127.0.0.1", 0}},
-      5, 101);
+      50, 101);
   hosts[0] = std::make_unique<NodeHost>(configs[0]);
   hosts[0]->start();
   const std::uint16_t port_one = hosts[0]->listening_port();
@@ -145,7 +148,7 @@ void test_three_host_runtime_recovery_and_dedup() {
       2, directory.wal(2),
       {TcpPeerEndpoint{1, "127.0.0.1", port_one},
        TcpPeerEndpoint{3, "127.0.0.1", 0}},
-      10, 102);
+      100, 102);
   hosts[1] = std::make_unique<NodeHost>(configs[1]);
   hosts[1]->start();
   const std::uint16_t port_two = hosts[1]->listening_port();
@@ -154,7 +157,7 @@ void test_three_host_runtime_recovery_and_dedup() {
       3, directory.wal(3),
       {TcpPeerEndpoint{1, "127.0.0.1", port_one},
        TcpPeerEndpoint{2, "127.0.0.1", port_two}},
-      15, 103);
+      150, 103);
   hosts[2] = std::make_unique<NodeHost>(configs[2]);
   hosts[2]->start();
 

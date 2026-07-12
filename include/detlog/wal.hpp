@@ -82,6 +82,7 @@ struct WalAppendResult {
   std::uint64_t first_frame_sequence{};
   std::uint64_t last_frame_sequence{};
   bool durable{};
+  std::size_t bytes_written{};
 };
 
 // Byte-level codec seam used by the deterministic stable-storage simulator.

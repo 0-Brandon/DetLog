@@ -69,6 +69,7 @@ enum class TcpTransportErrorCode : std::uint8_t {
   frame_too_large,
   queue_full,
   connection_down,
+  partitioned,
   io_error,
   stopped,
 };
@@ -142,6 +143,12 @@ class TcpTransport final {
 
   [[nodiscard]] std::vector<TcpTransportEvent> poll(
       std::size_t max_events = std::numeric_limits<std::size_t>::max());
+
+  // Benchmark/test fault control. Partitioning a peer drops queued inbound
+  // and outbound frames, closes the active connection on the I/O thread, and
+  // suppresses reconnects until healed. It performs no blocking socket I/O.
+  [[nodiscard]] bool set_peer_partitioned(NodeId peer,
+                                          bool partitioned);
 
   [[nodiscard]] bool running() const noexcept;
   [[nodiscard]] std::uint16_t listening_port() const;

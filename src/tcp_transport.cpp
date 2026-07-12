@@ -434,6 +434,7 @@ struct PeerState {
   TcpPeerEndpoint endpoint;
   sockaddr_in address{};
   bool has_outbound_endpoint{};
+  bool partitioned{};
   bool connected{};
   NativeSocket active_socket{kInvalidSocket};
   ConnectionKey active_key;
@@ -469,6 +470,8 @@ std::string_view to_string(TcpTransportErrorCode error) noexcept {
       return "queue_full";
     case TcpTransportErrorCode::connection_down:
       return "connection_down";
+    case TcpTransportErrorCode::partitioned:
+      return "partitioned";
     case TcpTransportErrorCode::io_error:
       return "io_error";
     case TcpTransportErrorCode::stopped:
@@ -591,6 +594,10 @@ class TcpTransport::Impl {
       return {TcpSendStatus::error, TcpTransportErrorCode::io_error,
               peer.queued_bytes};
     }
+    if (peer.partitioned) {
+      return {TcpSendStatus::down, TcpTransportErrorCode::partitioned,
+              peer.queued_bytes};
+    }
     if (!running_.load(std::memory_order_acquire) || !peer.connected) {
       return {TcpSendStatus::down,
               started_ ? TcpTransportErrorCode::connection_down
@@ -625,6 +632,30 @@ class TcpTransport::Impl {
             peer.queued_bytes};
   }
 
+  [[nodiscard]] bool set_peer_partitioned(NodeId peer_id,
+                                           bool partitioned) {
+    std::lock_guard lock(mutex_);
+    const auto found = peers_.find(peer_id);
+    if (found == peers_.end()) return false;
+    PeerState& peer = found->second;
+    if (peer.partitioned == partitioned) return true;
+    peer.partitioned = partitioned;
+    if (!partitioned) return true;
+
+    total_queued_bytes_ -= peer.queued_bytes;
+    peer.outbound.clear();
+    peer.queued_bytes = 0;
+    for (auto event = events_.begin(); event != events_.end();) {
+      if (event->peer == peer_id && event->kind == TcpEventKind::message) {
+        inbound_event_bytes_ -= event->bytes.size();
+        event = events_.erase(event);
+      } else {
+        ++event;
+      }
+    }
+    return true;
+  }
+
   [[nodiscard]] std::vector<TcpTransportEvent> poll(std::size_t max_events) {
     std::lock_guard lock(mutex_);
     const std::size_t count = std::min(max_events, events_.size());
@@ -649,6 +680,12 @@ class TcpTransport::Impl {
 
   [[nodiscard]] std::uint64_t incarnation() const noexcept {
     return config_.incarnation;
+  }
+
+  [[nodiscard]] bool peer_partitioned(NodeId peer_id) const {
+    std::lock_guard lock(mutex_);
+    const auto found = peers_.find(peer_id);
+    return found != peers_.end() && found->second.partitioned;
   }
 
  private:
@@ -727,7 +764,7 @@ class TcpTransport::Impl {
       }
       {
         std::lock_guard lock(mutex_);
-        if (peer.connected) continue;
+        if (peer.connected || peer.partitioned) continue;
       }
       if (connections.size() >= config_.limits.max_pending_connections) break;
       NativeSocket socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -821,6 +858,8 @@ class TcpTransport::Impl {
                                      std::size_t payload_offset,
                                      std::size_t payload_size) {
     std::lock_guard lock(mutex_);
+    const auto peer = peers_.find(connection.peer);
+    if (peer != peers_.end() && peer->second.partitioned) return true;
     if (events_.size() >= config_.limits.max_inbound_events ||
         payload_size >
             config_.limits.max_inbound_event_bytes -
@@ -852,6 +891,13 @@ class TcpTransport::Impl {
       const std::size_t wire_size =
           kLengthPrefixBytes + static_cast<std::size_t>(payload_size);
       if (connection.inbound.size() < wire_size) return true;
+      if (peer_partitioned(connection.peer)) {
+        connection.inbound.erase(
+            connection.inbound.begin(),
+            connection.inbound.begin() +
+                static_cast<std::ptrdiff_t>(wire_size));
+        continue;
+      }
       if (!enqueue_message(connection, kLengthPrefixBytes, payload_size)) {
         return true;
       }
@@ -969,6 +1015,11 @@ class TcpTransport::Impl {
     connection.peer = remote.identity.node_id;
     connection.peer_incarnation = remote.incarnation;
     connection.key = connection_key(connection, remote);
+
+    if (peer_partitioned(connection.peer)) {
+      close_connection(connection, TcpTransportErrorCode::partitioned, false);
+      return false;
+    }
 
     NativeSocket replaced_socket = kInvalidSocket;
     bool reject_duplicate = false;
@@ -1139,6 +1190,17 @@ class TcpTransport::Impl {
                              return connection.socket == kInvalidSocket;
                            }),
             connections.end());
+        for (Connection& connection : connections) {
+          const std::optional<NodeId> peer =
+              connection.phase == ConnectionPhase::established
+                  ? std::optional<NodeId>{connection.peer}
+                  : connection.expected_peer;
+          if (peer && peer_partitioned(*peer)) {
+            close_connection(connection, TcpTransportErrorCode::partitioned,
+                             connection.phase ==
+                                 ConnectionPhase::established);
+          }
+        }
         attempt_outgoing(connections);
         for (Connection& connection : connections) {
           if (connection.phase == ConnectionPhase::established &&
@@ -1311,6 +1373,11 @@ TcpSendResult TcpTransport::send(
 
 std::vector<TcpTransportEvent> TcpTransport::poll(std::size_t max_events) {
   return impl_->poll(max_events);
+}
+
+bool TcpTransport::set_peer_partitioned(NodeId peer,
+                                        bool partitioned) {
+  return impl_->set_peer_partitioned(peer, partitioned);
 }
 
 bool TcpTransport::running() const noexcept { return impl_->running(); }

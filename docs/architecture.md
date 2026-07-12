@@ -81,14 +81,19 @@ The default client contract is:
 3. the leader applies the entry in order;
 4. the leader returns the deterministic result.
 
-Flush-per-frame and bounded group commit preserve this contract because no
-dependent acknowledgement is released before the flush. A no-flush mode is an
-explicitly unsafe benchmark mode and is never used for safety claims.
+Flush-per-frame and bounded group commit preserve this contract. In grouped
+runtime mode, WAL frames may be staged without a barrier, but every dependent
+message, timer, trace, public consensus status, state-machine apply, and client
+reply is operation-tagged and quarantined until the shared flush succeeds. A
+group closes on its operation, elapsed-time, or configured WAL byte bound. A
+group append/flush failure is fail-stop and discards the quarantine. A
+no-flush mode is an explicitly unsafe benchmark mode and is never used for
+safety claims.
 
 ## Failure model
 
 Supported failures include message loss, delay, duplication, reordering,
-directional partitions, process crash, slow storage, rejected/short writes,
+directional partitions, process crash, per-node slow storage, rejected/short writes,
 and a torn unflushed WAL tail. A restarted node may be far behind while keeping
 its latest intact durable state.
 
@@ -106,3 +111,6 @@ per-peer progress and sends bounded batches rather than queueing one message
 per entry. Timer and heartbeat work is coalesced. The simulator caps scheduled
 events and fault duplication. It retains a bounded trace with an explicit
 saturation marker; callers can serialize that retained trace as JSONL.
+The real TCP adapter also exposes a bounded test/benchmark partition control
+that drops queued frames, disconnects the selected peer, suppresses reconnects,
+and heals without retaining partition-period traffic.

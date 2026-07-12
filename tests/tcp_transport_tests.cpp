@@ -180,12 +180,49 @@ void test_wrong_cluster_is_rejected() {
   wrong_cluster.stop();
 }
 
+void test_partition_drops_frames_and_heals() {
+  TcpTransport first(config(1, 2, 0));
+  first.start();
+  TcpTransport second(config(2, 1, first.listening_port()));
+  second.start();
+  wait_until_connected(first, 2, second, 1);
+
+  const std::array<std::byte, 3> frame{
+      std::byte{0x01}, std::byte{0x02}, std::byte{0x03}};
+  REQUIRE(first.set_peer_partitioned(2, true));
+  REQUIRE(second.set_peer_partitioned(1, true));
+  const auto blocked = first.send(2, frame);
+  REQUIRE(blocked.status == TcpSendStatus::down);
+  REQUIRE(blocked.error == TcpTransportErrorCode::partitioned);
+  REQUIRE(!first.set_peer_partitioned(99, true));
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  for (const auto& event : second.poll()) {
+    REQUIRE(event.kind != TcpEventKind::message);
+  }
+
+  REQUIRE(first.set_peer_partitioned(2, false));
+  REQUIRE(second.set_peer_partitioned(1, false));
+  wait_until_connected(first, 2, second, 1);
+  REQUIRE(first.send(2, frame).status == TcpSendStatus::queued);
+  const auto received = wait_for_event(
+      second, [](const TcpTransportEvent& event) {
+        return event.kind == TcpEventKind::message && event.peer == 1;
+      });
+  REQUIRE(received.has_value());
+  REQUIRE(received->bytes == std::vector<std::byte>(frame.begin(), frame.end()));
+
+  first.stop();
+  second.stop();
+}
+
 }  // namespace
 
 int main() {
   const std::vector<std::pair<std::string_view, std::function<void()>>> tests{
       {"codec roundtrip and bounds", test_codec_roundtrip_and_bounds},
       {"wrong cluster rejection", test_wrong_cluster_is_rejected},
+      {"partition drop and heal", test_partition_drops_frames_and_heals},
   };
   for (const auto& [name, test] : tests) {
     try {

@@ -28,6 +28,11 @@ recorded in the leader's local commit watermark, and applied in order. Client
 sessions use monotonically increasing sequence numbers so an ambiguous retry
 does not execute the command twice.
 
+The real runtime defaults to one durability barrier per WAL frame and also
+supports bounded safe group commit. Group mode quarantines every dependent
+effect until its shared flush succeeds; explicit no-flush remains unsafe and
+is used only by clearly labelled storage experiments.
+
 The deterministic environment uses integer virtual time and a pinned PRNG.
 The exact replay key is the executable/build, full scenario configuration,
 external action list, and seed. A lagging node may restart from its latest
@@ -78,6 +83,11 @@ Run a deterministic leader-crash/restart history and retain its JSONL trace:
 build/debug/detlog-sim --seed 42 --nodes 3 --trace trace.jsonl
 ```
 
+Use `--scenario` for leader crash, symmetric/asymmetric partition, ambiguous
+retry, torn WAL, slow follower, per-node slow disk, or saturation histories.
+The complete representative corpus can be regenerated with
+`scripts/generate_trace_corpus.sh` or `scripts\generate_trace_corpus.ps1`.
+
 `detlog-node` hosts one file-backed node. The
 [real TCP walkthrough](docs/tcp-demo.md) gives complete three-process commands,
 including restart from the same WAL.
@@ -102,7 +112,7 @@ protects it.
 
 ```text
 include/detlog/    Public types and subsystem interfaces
-src/               Consensus, state machine, codec, storage, and simulator
+src/               Consensus, reference model, state machine, storage, runtime
 apps/              Demonstration executables
 tests/             Unit and deterministic scenario tests
 fuzz/              Engine-independent parser fuzz entry points

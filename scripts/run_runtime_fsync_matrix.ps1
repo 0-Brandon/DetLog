@@ -3,6 +3,8 @@ param(
   [string]$OutputDirectory = "",
   [int]$Repetitions = 3,
   [int]$Operations = 1000,
+  [int[]]$GroupSizes = @(2, 5),
+  [int]$GroupDelayMs = 2,
   [string]$Python = "python"
 )
 
@@ -15,10 +17,17 @@ if ([string]::IsNullOrWhiteSpace($Executable)) {
 }
 if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
   $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-  $OutputDirectory = Join-Path $root "bench-results\$stamp"
+  $OutputDirectory = Join-Path $root "bench-results\runtime-fsync-$stamp"
 }
-if ($Repetitions -lt 1 -or $Operations -le 5) {
-  throw "Repetitions must be positive and Operations must exceed the largest client count (5)"
+if ($Repetitions -lt 1 -or $Operations -le 5 -or
+    $GroupDelayMs -lt 1 -or $GroupDelayMs -gt 1000 -or
+    $GroupSizes.Count -eq 0) {
+  throw "Repetitions/delay must be positive, operations must exceed 5, and group sizes must be present"
+}
+foreach ($group in $GroupSizes) {
+  if ($group -lt 2 -or $group -gt 1024) {
+    throw "Every group size must be in the range 2..1024"
+  }
 }
 if (-not (Test-Path -LiteralPath $Executable -PathType Leaf)) {
   throw "Benchmark executable not found: $Executable"
@@ -66,59 +75,54 @@ function Invoke-StreamedBenchmark([string[]]$Arguments) {
   }
 }
 
-$expectedRuns = 144 * $Repetitions
-
+$variants = @(@{ policy = "flush-every"; size = $GroupSizes[0] })
+foreach ($group in $GroupSizes) {
+  $variants += @{ policy = "group"; size = $group }
+}
+$expectedRuns = 36 * $variants.Count * $Repetitions
 $matrixDescription = [ordered]@{
-  schema = "detlog-bench-matrix/v1"
+  schema = "detlog-runtime-fsync-matrix/v1"
   generated_at = (Get-Date).ToString("o")
   executable = $Executable
   repetitions = $Repetitions
   operations_per_run = $Operations
   expected_runs = $expectedRuns
+  mode = "tcp"
   nodes = @(3, 5)
   clients = @(1, 3, 5)
   payload_bytes = @(64, 1024, 16384)
-  sim_scenarios = @("healthy", "leader-crash", "partition", "slow-follower", "slow-fsync")
-  tcp_scenarios = @("healthy", "leader-crash", "partition")
-  tcp_unsupported = @("slow-follower", "slow-fsync")
-  tcp_partition_ms = 1000
-  tcp_wal_flush_policy = "flush-every"
-  sim_wal_flush_policy = "simulated_flush_every"
-  note = "TCP nodes share one benchmark process but use real loopback sockets and distinct WALs; partition is a literal one-second bidirectional transport cut."
+  scenarios = @("healthy", "leader-crash")
+  policies = @("flush-every", "group")
+  group_sizes = @($GroupSizes)
+  group_delay_ms = $GroupDelayMs
+  note = "End-to-end NodeHost comparison over real loopback TCP and distinct WAL files."
 }
 $matrixJson = $matrixDescription | ConvertTo-Json -Depth 4
 [System.IO.File]::WriteAllText(
   $matrix, $matrixJson + [Environment]::NewLine, $utf8NoBom)
 
 $runIndex = 0
-foreach ($mode in @("sim", "tcp")) {
-  $scenarios = if ($mode -eq "sim") {
-    @("healthy", "leader-crash", "partition", "slow-follower", "slow-fsync")
-  } else {
-    @("healthy", "leader-crash", "partition")
-  }
-  foreach ($nodes in @(3, 5)) {
-    foreach ($clients in @(1, 3, 5)) {
-      foreach ($payload in @(64, 1024, 16384)) {
-        foreach ($scenario in $scenarios) {
+foreach ($nodes in @(3, 5)) {
+  foreach ($clients in @(1, 3, 5)) {
+    foreach ($payload in @(64, 1024, 16384)) {
+      foreach ($scenario in @("healthy", "leader-crash")) {
+        foreach ($variant in $variants) {
           for ($trial = 1; $trial -le $Repetitions; $trial++) {
             $runIndex++
-            $seed = [uint64](1000000 * $trial + $runIndex)
+            $seed = [uint64](2000000 * $trial + $runIndex)
             $arguments = @(
-              "--mode", $mode,
-              "--nodes", $nodes,
-              "--clients", $clients,
-              "--payload", $payload,
-              "--operations", $Operations,
-              "--trial", $trial,
-              "--seed", $seed,
-              "--scenario", $scenario,
-              "--partition-ms", 1000
+              "--mode", "tcp", "--nodes", $nodes,
+              "--clients", $clients, "--payload", $payload,
+              "--operations", $Operations, "--trial", $trial,
+              "--seed", $seed, "--scenario", $scenario,
+              "--fsync-policy", $variant.policy,
+              "--group-size", $variant.size,
+              "--group-delay-ms", $GroupDelayMs
             )
-            Write-Host "[$runIndex] $mode $scenario n=$nodes c=$clients p=$payload trial=$trial"
+            Write-Host "[$runIndex] $scenario n=$nodes c=$clients p=$payload fsync=$($variant.policy) g=$($variant.size) trial=$trial"
             $exitCode = Invoke-StreamedBenchmark $arguments
             if ($exitCode -ne 0) {
-              throw "Benchmark run failed with exit code $exitCode; raw output was preserved in $raw"
+              throw "Benchmark failed with exit code $exitCode; raw output remains in $raw"
             }
           }
         }
@@ -138,4 +142,4 @@ if ($LASTEXITCODE -ne 0) {
 if ($LASTEXITCODE -ne 0) {
   throw "Plot generation failed; raw results remain in $raw"
 }
-Write-Host "Benchmark artifacts: $OutputDirectory"
+Write-Host "Runtime fsync benchmark artifacts: $OutputDirectory"

@@ -44,6 +44,10 @@ foreach ($group in $GroupSizes) {
     throw "Every group size must be in the range 2..1024"
   }
 }
+if ((Test-Path -LiteralPath $OutputDirectory) -and
+    @(Get-ChildItem -LiteralPath $OutputDirectory -Force).Count -ne 0) {
+  throw "Refusing to overwrite nonempty output directory: $OutputDirectory"
+}
 
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 $raw = Join-Path $OutputDirectory "raw-includes-nondurable.jsonl"
@@ -108,19 +112,25 @@ function Invoke-WalBenchmark {
   $startInfo.RedirectStandardError = $true
   $process = New-Object System.Diagnostics.Process
   $process.StartInfo = $startInfo
-  if (-not $process.Start()) {
-    throw "Could not start WAL benchmark executable: $Executable"
-  }
-  $stdout = $process.StandardOutput.ReadToEnd()
-  $stderrText = $process.StandardError.ReadToEnd()
-  $process.WaitForExit()
-  $exitCode = $process.ExitCode
-  $process.Dispose()
-  if (-not [string]::IsNullOrEmpty($stdout)) {
-    [System.IO.File]::AppendAllText($raw, $stdout, $utf8NoBom)
-  }
-  if (-not [string]::IsNullOrEmpty($stderrText)) {
-    [System.IO.File]::AppendAllText($errors, $stderrText, $utf8NoBom)
+  $rawStream = [System.IO.File]::Open(
+    $raw, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write,
+    [System.IO.FileShare]::Read)
+  $errorStream = [System.IO.File]::Open(
+    $errors, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write,
+    [System.IO.FileShare]::Read)
+  try {
+    if (-not $process.Start()) {
+      throw "Could not start WAL benchmark executable: $Executable"
+    }
+    $stdoutCopy = $process.StandardOutput.BaseStream.CopyToAsync($rawStream)
+    $stderrCopy = $process.StandardError.BaseStream.CopyToAsync($errorStream)
+    $process.WaitForExit()
+    [System.Threading.Tasks.Task]::WaitAll(@($stdoutCopy, $stderrCopy))
+    $exitCode = $process.ExitCode
+  } finally {
+    $rawStream.Dispose()
+    $errorStream.Dispose()
+    $process.Dispose()
   }
   if ($exitCode -ne 0) {
     throw "WAL benchmark failed with exit code $exitCode; artifacts were preserved in $OutputDirectory"
@@ -142,6 +152,11 @@ foreach ($entries in $EntrySizes) {
   }
 }
 
+& $Python (Join-Path $PSScriptRoot "validate_benchmark_artifacts.py") `
+  $OutputDirectory
+if ($LASTEXITCODE -ne 0) {
+  throw "WAL completeness validation failed; raw results remain in $raw"
+}
 & $Python (Join-Path $PSScriptRoot "plot_wal_bench.py") $raw `
   --csv $summary --svg $figures
 if ($LASTEXITCODE -ne 0) {

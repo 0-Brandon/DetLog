@@ -1148,7 +1148,8 @@ class Wal::Impl {
     state_.last_frame_sequence = sequence;
     state_.file_bytes = write_offset;
     if (should_flush) state_.durable_frame_sequence = sequence;
-    return WalAppendResult{first_sequence, sequence, should_flush};
+    return WalAppendResult{first_sequence, sequence, should_flush,
+                           group_bytes};
   }
 
   void flush() {

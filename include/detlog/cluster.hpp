@@ -159,6 +159,11 @@ class DeterministicCluster {
                                std::uint32_t count = 1);
   [[nodiscard]] bool duplicate_next(NodeId from, NodeId to,
                                     std::uint32_t extra_copies = 1);
+  // Changes the latency used for subsequent simulated storage submissions on
+  // one live member. The retained override is bounded by cluster membership;
+  // configured global latencies remain the default for every member.
+  [[nodiscard]] bool set_storage_latency(NodeId node, Tick write_ticks,
+                                         Tick flush_ticks);
   [[nodiscard]] bool fail_next_storage_write(NodeId node);
   [[nodiscard]] bool short_write_next(NodeId node,
                                       std::size_t prefix_bytes);

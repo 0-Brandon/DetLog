@@ -27,13 +27,55 @@ struct StorageTask {
   PersistBatch batch;
 };
 
+enum class StorageNoticeKind : std::uint8_t {
+  // A normal flush-every or explicitly unsafe append completed.
+  complete,
+  // A group-commit frame was written but is not durable. NodeHost may use
+  // this only to advance its quarantined speculative pipeline.
+  staged,
+  // One shared flush made group_size frames durable. delayed_completion is
+  // present for a commit-index batch that was deliberately not staged.
+  barrier,
+  // Group staging or its durability barrier failed. No quarantined effect may
+  // be released after this notice.
+  failed,
+};
+
+struct StorageNotice {
+  StorageNoticeKind kind{StorageNoticeKind::failed};
+  StorageComplete completion;
+  std::optional<StorageComplete> delayed_completion;
+  std::size_t group_size{};
+  std::size_t group_bytes{};
+  bool flushed{};
+  StorageOpId durable_through{};
+};
+
+struct StorageEnqueueResult {
+  bool accepted{};
+  std::size_t queue_depth{};
+};
+
+struct QuarantinedEffect {
+  StorageOpId durability_dependency{};
+  RaftEffect effect;
+};
+
 class StorageWorker {
  public:
   StorageWorker(std::unique_ptr<Wal> wal, std::size_t max_tasks,
-                std::size_t max_completions)
+                std::size_t max_completions,
+                WalFlushPolicy configured_flush_policy,
+                NodeHostGroupCommitConfig group_commit,
+                std::size_t max_frame_bytes,
+                std::size_t max_group_bytes)
       : wal_(std::move(wal)),
         max_tasks_(max_tasks),
-        max_completions_(max_completions) {}
+        max_completions_(max_completions),
+        configured_flush_policy_(configured_flush_policy),
+        group_commit_(group_commit),
+        max_frame_bytes_(max_frame_bytes),
+        max_group_bytes_(max_group_bytes) {}
 
   ~StorageWorker() { stop(); }
 
@@ -47,20 +89,21 @@ class StorageWorker {
     thread_ = std::thread([this] { run(); });
   }
 
-  [[nodiscard]] bool enqueue(StorageTask task) {
+  [[nodiscard]] StorageEnqueueResult enqueue(StorageTask task) {
     std::lock_guard lock(mutex_);
     if (!started_ || stopping_ || failed_ || tasks_.size() >= max_tasks_) {
-      return false;
+      return {};
     }
     tasks_.push_back(std::move(task));
+    const std::size_t depth = tasks_.size();
     task_ready_.notify_one();
-    return true;
+    return {true, depth};
   }
 
-  [[nodiscard]] std::vector<StorageComplete> take(std::size_t maximum) {
+  [[nodiscard]] std::vector<StorageNotice> take(std::size_t maximum) {
     std::lock_guard lock(mutex_);
     const std::size_t count = std::min(maximum, completions_.size());
-    std::vector<StorageComplete> result;
+    std::vector<StorageNotice> result;
     result.reserve(count);
     for (std::size_t index = 0; index < count; ++index) {
       result.push_back(std::move(completions_.front()));
@@ -82,7 +125,33 @@ class StorageWorker {
   }
 
  private:
-  void run() noexcept {
+  [[nodiscard]] bool publish(StorageNotice notice) noexcept {
+    std::unique_lock lock(mutex_);
+    completion_space_.wait(lock, [this] {
+      return stopping_ || completions_.size() < max_completions_;
+    });
+    if (stopping_) return false;
+    completions_.push_back(std::move(notice));
+    return true;
+  }
+
+  [[nodiscard]] static StorageComplete success(StorageOpId operation) {
+    return StorageComplete{operation, true, {}};
+  }
+
+  [[nodiscard]] static StorageComplete failure(StorageOpId operation,
+                                               std::string message) {
+    if (message.size() > 512) message.resize(512);
+    return StorageComplete{operation, false, std::move(message)};
+  }
+
+  void mark_failed() noexcept {
+    std::lock_guard lock(mutex_);
+    failed_ = true;
+    tasks_.clear();
+  }
+
+  void run_ungrouped() noexcept {
     for (;;) {
       StorageTask task;
       {
@@ -94,42 +163,189 @@ class StorageWorker {
         tasks_.pop_front();
       }
 
-      StorageComplete complete;
-      complete.op_id = task.operation;
+      StorageNotice notice;
+      notice.kind = StorageNoticeKind::complete;
+      notice.completion = success(task.operation);
       try {
         const WalAppendResult appended = wal_->append(task.batch);
-        if (!appended.durable) wal_->flush();
-        complete.success = true;
+        if (configured_flush_policy_ == WalFlushPolicy::flush_every_append) {
+          if (!appended.durable) wal_->flush();
+          notice.flushed = true;
+        }
       } catch (const std::exception& error) {
-        complete.success = false;
-        complete.error = error.what();
-        if (complete.error.size() > 512) complete.error.resize(512);
-        std::lock_guard lock(mutex_);
-        failed_ = true;
+        notice.completion = failure(task.operation, error.what());
+        mark_failed();
       } catch (...) {
-        complete.success = false;
-        complete.error = "unknown storage worker failure";
-        std::lock_guard lock(mutex_);
-        failed_ = true;
+        notice.completion =
+            failure(task.operation, "unknown storage worker failure");
+        mark_failed();
+      }
+      const bool failed = !notice.completion.success;
+      if (!publish(std::move(notice)) || failed) return;
+    }
+  }
+
+  void run_grouped() noexcept {
+    std::size_t group_size = 0;
+    std::size_t group_bytes = 0;
+    StorageOpId group_last_operation = 0;
+    std::chrono::steady_clock::time_point deadline;
+
+    for (;;) {
+      StorageTask task;
+      bool have_task = false;
+      {
+        std::unique_lock lock(mutex_);
+        if (group_size == 0) {
+          task_ready_.wait(lock,
+                           [this] { return stopping_ || !tasks_.empty(); });
+        } else {
+          task_ready_.wait_until(lock, deadline, [this] {
+            return stopping_ || !tasks_.empty();
+          });
+        }
+        if (stopping_) return;
+        if (!tasks_.empty()) {
+          task = std::move(tasks_.front());
+          tasks_.pop_front();
+          have_task = true;
+        }
       }
 
-      std::unique_lock lock(mutex_);
-      completion_space_.wait(lock, [this] {
-        return stopping_ || completions_.size() < max_completions_;
-      });
-      if (stopping_) return;
-      completions_.push_back(std::move(complete));
+      // A timeout closes the current group even when no new task arrived.
+      if (!have_task) {
+        try {
+          wal_->flush();
+        } catch (const std::exception& error) {
+          mark_failed();
+          (void)publish(StorageNotice{
+              StorageNoticeKind::failed, failure(0, error.what()),
+              std::nullopt, group_size, group_bytes, false, 0});
+          return;
+        } catch (...) {
+          mark_failed();
+          (void)publish(StorageNotice{
+              StorageNoticeKind::failed,
+              failure(0, "unknown group-commit flush failure"), std::nullopt,
+              group_size, group_bytes, false, 0});
+          return;
+        }
+        if (!publish(StorageNotice{StorageNoticeKind::barrier, {},
+                                   std::nullopt, group_size, group_bytes, true,
+                                   group_last_operation})) {
+          return;
+        }
+        group_size = 0;
+        group_bytes = 0;
+        group_last_operation = 0;
+        continue;
+      }
+
+      try {
+        const WalAppendResult appended = wal_->append(task.batch);
+        if (appended.durable) {
+          throw std::logic_error(
+              "group-commit staging unexpectedly crossed a durability barrier");
+        }
+        if (appended.bytes_written >
+            max_group_bytes_ - std::min(max_group_bytes_, group_bytes)) {
+          throw std::logic_error(
+              "runtime group exceeded the configured WAL byte bound");
+        }
+        group_bytes += appended.bytes_written;
+      } catch (const std::exception& error) {
+        mark_failed();
+        (void)publish(StorageNotice{
+            StorageNoticeKind::failed, failure(task.operation, error.what()),
+            std::nullopt, group_size, group_bytes, false, 0});
+        return;
+      } catch (...) {
+        mark_failed();
+        (void)publish(StorageNotice{
+            StorageNoticeKind::failed,
+            failure(task.operation, "unknown group-commit append failure"),
+            std::nullopt, group_size, group_bytes, false, 0});
+        return;
+      }
+
+      if (group_size == 0) {
+        deadline = std::chrono::steady_clock::now() + group_commit_.max_delay;
+      }
+      ++group_size;
+      group_last_operation = task.operation;
+
+      // Advancing commit_index can invoke apply_committed() from the storage
+      // callback. Never tell Raft that such a batch completed at the merely
+      // written stage: force the shared flush first and deliver its completion
+      // in the barrier notice. Closing when the group enters its final
+      // max-frame-sized byte headroom guarantees that any next frame (which
+      // the WAL bounds by max_frame_bytes) starts a fresh group rather than
+      // crossing max_group_bytes.
+      const bool close_group =
+          task.batch.commit_index.has_value() ||
+          group_size >= group_commit_.max_operations ||
+          group_bytes > max_group_bytes_ - max_frame_bytes_ ||
+          std::chrono::steady_clock::now() >= deadline;
+      if (!close_group) {
+        if (!publish(StorageNotice{StorageNoticeKind::staged,
+                                   success(task.operation), std::nullopt, 0,
+                                   0, false, 0})) {
+          return;
+        }
+      }
+      if (!close_group) continue;
+
+      try {
+        wal_->flush();
+      } catch (const std::exception& error) {
+        mark_failed();
+        (void)publish(StorageNotice{
+            StorageNoticeKind::failed, failure(task.operation, error.what()),
+            std::nullopt, group_size, group_bytes, false, 0});
+        return;
+      } catch (...) {
+        mark_failed();
+        (void)publish(StorageNotice{
+            StorageNoticeKind::failed,
+            failure(task.operation, "unknown group-commit flush failure"),
+            std::nullopt, group_size, group_bytes, false, 0});
+        return;
+      }
+
+      std::optional<StorageComplete> delayed;
+      delayed = success(task.operation);
+      if (!publish(StorageNotice{StorageNoticeKind::barrier, {},
+                                 std::move(delayed), group_size, group_bytes,
+                                 true,
+                                 group_last_operation})) {
+        return;
+      }
+      group_size = 0;
+      group_bytes = 0;
+      group_last_operation = 0;
+    }
+  }
+
+  void run() noexcept {
+    if (group_commit_.enabled) {
+      run_grouped();
+    } else {
+      run_ungrouped();
     }
   }
 
   std::unique_ptr<Wal> wal_;
   std::size_t max_tasks_{};
   std::size_t max_completions_{};
+  WalFlushPolicy configured_flush_policy_{WalFlushPolicy::flush_every_append};
+  NodeHostGroupCommitConfig group_commit_;
+  std::size_t max_frame_bytes_{};
+  std::size_t max_group_bytes_{};
   std::mutex mutex_;
   std::condition_variable task_ready_;
   std::condition_variable completion_space_;
   std::deque<StorageTask> tasks_;
-  std::deque<StorageComplete> completions_;
+  std::deque<StorageNotice> completions_;
   std::thread thread_;
   bool started_{};
   bool stopping_{};
@@ -149,6 +365,17 @@ struct HostTimer {
   return state * 0x2545f4914f6cdd1dULL;
 }
 
+[[nodiscard]] WalOptions runtime_wal_options(const NodeHostConfig& config) {
+  WalOptions options = config.wal;
+  if (config.group_commit.enabled) {
+    // The worker owns the corresponding flush barrier and NodeHost quarantines
+    // all effects until it succeeds. This internal unsafe setting is never an
+    // externally unsafe acknowledgement policy.
+    options.flush_policy = WalFlushPolicy::unsafe_no_flush;
+  }
+  return options;
+}
+
 void validate_host_config(const NodeHostConfig& config) {
   if (config.wal_path.empty() || config.raft.node_id == 0 ||
       config.identity.node_id != config.raft.node_id ||
@@ -164,8 +391,19 @@ void validate_host_config(const NodeHostConfig& config) {
       config.limits.max_trace_records == 0 ||
       config.limits.max_storage_tasks == 0 ||
       config.limits.max_storage_completions == 0 ||
+      config.limits.max_group_quarantined_effects == 0 ||
       config.limits.max_tcp_events_per_poll == 0) {
     throw std::invalid_argument("NodeHost queue and timing bounds must be nonzero");
+  }
+  if (config.group_commit.enabled &&
+      (config.wal.flush_policy != WalFlushPolicy::flush_every_append ||
+       config.group_commit.max_operations == 0 ||
+       config.group_commit.max_operations > config.wal.max_group_frames ||
+       config.group_commit.max_delay.count() <= 0 ||
+       config.group_commit.max_delay > std::chrono::seconds(60))) {
+    throw std::invalid_argument(
+        "safe group commit requires the safe WAL policy and bounded positive "
+        "operation/delay limits");
   }
   if (config.codec.max_frame_bytes == 0 ||
       config.codec.max_frame_bytes > config.tcp.limits.max_frame_bytes) {
@@ -236,16 +474,19 @@ class NodeHost::Impl {
     if (random_state_ == 0) random_state_ = 1;
 
     auto wal = std::make_unique<Wal>(config_.wal_path, config_.identity,
-                                     config_.wal);
+                                     runtime_wal_options(config_));
     const WalState recovered_wal = wal->state();
     RecoveredState recovered;
     recovered.hard_state = recovered_wal.hard_state;
     recovered.log = recovered_wal.entries;
     recovered.commit_index = recovered_wal.commit_index;
     raft_ = std::make_unique<RaftNode>(config_.raft, std::move(recovered));
+    published_status_ = live_status();
     storage_ = std::make_unique<StorageWorker>(
         std::move(wal), config_.limits.max_storage_tasks,
-        config_.limits.max_storage_completions);
+        config_.limits.max_storage_completions, config_.wal.flush_policy,
+        config_.group_commit, config_.wal.max_frame_bytes,
+        config_.wal.max_group_bytes);
     tcp_ = std::make_unique<TcpTransport>(config_.tcp);
   }
 
@@ -360,6 +601,16 @@ class NodeHost::Impl {
     return result;
   }
 
+  [[nodiscard]] bool set_peer_partitioned(NodeId peer,
+                                           bool partitioned) noexcept {
+    try {
+      ensure_owner();
+      return tcp_->set_peer_partitioned(peer, partitioned);
+    } catch (...) {
+      return false;
+    }
+  }
+
   [[nodiscard]] bool running() const noexcept { return running_; }
 
   [[nodiscard]] std::uint16_t listening_port() const {
@@ -369,18 +620,18 @@ class NodeHost::Impl {
 
   [[nodiscard]] NodeHostStatus status() const {
     ensure_owner();
-    return NodeHostStatus{raft_->id(),
-                          fatal_error_ ? RaftRole::unavailable : raft_->role(),
-                          raft_->current_term(),
-                          raft_->leader_hint(),
-                          raft_->leader_ready(),
-                          raft_->last_log_index(),
-                          raft_->durable_last_log_index(),
-                          raft_->commit_index(),
-                          raft_->last_applied(),
-                          raft_->storage_pending(),
-                          owner_events_.size(),
-                          client_queue_.size()};
+    NodeHostStatus result =
+        config_.group_commit.enabled &&
+                (group_barrier_active_ || fatal_error_)
+            ? published_status_
+            : live_status();
+    // Queue depths are runtime state, not speculative consensus state.
+    result.owner_events = owner_events_.size();
+    result.client_queue = client_queue_.size();
+    if (config_.group_commit.enabled && group_barrier_active_) {
+      result.storage_pending = true;
+    }
+    return result;
   }
 
   [[nodiscard]] NodeHostMetrics metrics() const noexcept { return metrics_; }
@@ -397,6 +648,27 @@ class NodeHost::Impl {
   }
 
  private:
+  [[nodiscard]] NodeHostStatus live_status() const noexcept {
+    return NodeHostStatus{raft_->id(),
+                          fatal_error_ ? RaftRole::unavailable : raft_->role(),
+                          raft_->current_term(),
+                          raft_->leader_hint(),
+                          raft_->leader_ready(),
+                          raft_->last_log_index(),
+                          raft_->durable_last_log_index(),
+                          raft_->commit_index(),
+                          raft_->last_applied(),
+                          raft_->storage_pending(),
+                          owner_events_.size(),
+                          client_queue_.size()};
+  }
+
+  void refresh_published_status() noexcept {
+    if (!group_barrier_active_ && !fatal_error_) {
+      published_status_ = live_status();
+    }
+  }
+
   void ensure_owner() const {
     if (started_ && std::this_thread::get_id() != owner_thread_) {
       throw std::logic_error("NodeHost consensus API called from non-owner thread");
@@ -461,10 +733,16 @@ class NodeHost::Impl {
     if (!running_) return;
     fatal_error_ = true;
     running_ = false;
+    quarantined_effects_.clear();
+    group_barrier_active_ = false;
+    published_status_.role = RaftRole::unavailable;
+    published_status_.leader_hint.reset();
+    published_status_.leader_ready = false;
+    published_status_.storage_pending = false;
     for (const ClientToken token : outstanding_tokens_) {
       if (replies_.size() >= config_.limits.max_client_slots) break;
       replies_.push_back(ClientReply{token, ClientStatus::unavailable,
-                                     raft_->leader_hint(), 0, {}});
+                                     std::nullopt, 0, {}});
       ++metrics_.client_replies;
     }
     outstanding_tokens_.clear();
@@ -472,6 +750,52 @@ class NodeHost::Impl {
     owner_events_.clear();
     tcp_->stop();
     storage_->stop();
+  }
+
+  void fail_group_storage() noexcept {
+    // Raft may already have consumed write-stage completions. A later append or
+    // flush error therefore cannot be represented as an ordinary completion.
+    // Fail-stop is the only safe outcome: discard every quarantined effect and
+    // never expose speculative status, sends, applies, or client successes.
+    quarantined_effects_.clear();
+    group_barrier_active_ = false;
+    fail_transport();
+  }
+
+  void complete_group_barrier(StorageNotice notice) {
+    metrics_.storage_completed += notice.group_size;
+    if (notice.flushed) ++metrics_.storage_flushes;
+    ++metrics_.storage_group_commits;
+    metrics_.storage_grouped_operations += notice.group_size;
+    metrics_.storage_group_max_size =
+        std::max(metrics_.storage_group_max_size, notice.group_size);
+    metrics_.storage_group_max_bytes =
+        std::max(metrics_.storage_group_max_bytes, notice.group_bytes);
+
+    // Invariant: PersistEffects are submitted immediately, but every other
+    // effect produced after the first staged frame stays in this quarantine.
+    // Only this successful WAL flush opens the gate. stop() and every failure
+    // path discard the quarantine instead.
+    durable_operation_through_ =
+        std::max(durable_operation_through_, notice.durable_through);
+    std::vector<QuarantinedEffect> still_waiting;
+    still_waiting.reserve(quarantined_effects_.size());
+    for (QuarantinedEffect& held : quarantined_effects_) {
+      if (held.durability_dependency <= durable_operation_through_) {
+        dispatch_effect(held.effect);
+        if (!running_) break;
+      } else {
+        still_waiting.push_back(std::move(held));
+      }
+    }
+    quarantined_effects_ = std::move(still_waiting);
+    group_barrier_active_ =
+        durable_operation_through_ < last_submitted_operation_;
+
+    if (running_ && notice.delayed_completion) {
+      handle_effects(raft_->step(std::move(*notice.delayed_completion)));
+    }
+    refresh_published_status();
   }
 
   [[nodiscard]] bool gather_inputs() {
@@ -484,12 +808,37 @@ class NodeHost::Impl {
     std::size_t available =
         config_.limits.max_owner_events - owner_events_.size();
     if (available != 0) {
-      std::vector<StorageComplete> completions = storage_->take(available);
-      for (StorageComplete& complete : completions) {
-        ++metrics_.storage_completed;
-        if (!complete.success) ++metrics_.storage_errors;
-        owner_events_.push_back(std::move(complete));
+      std::vector<StorageNotice> completions = storage_->take(available);
+      for (StorageNotice& notice : completions) {
         activity = true;
+        if (config_.group_commit.enabled) {
+          switch (notice.kind) {
+            case StorageNoticeKind::staged:
+              // This completion advances only the private Raft pipeline. The
+              // gate remains closed, and commit-index batches never arrive by
+              // this path, so apply_committed() cannot run pre-flush.
+              ++metrics_.storage_staged_operations;
+              handle_effects(raft_->step(std::move(notice.completion)));
+              break;
+            case StorageNoticeKind::barrier:
+              complete_group_barrier(std::move(notice));
+              break;
+            case StorageNoticeKind::failed:
+            case StorageNoticeKind::complete:
+              ++metrics_.storage_errors;
+              fail_group_storage();
+              return true;
+          }
+          // A staged completion or released effect can itself trip a bounded
+          // queue or transport fail-stop. Never feed any later notice from the
+          // already-taken batch into Raft after that boundary.
+          if (!running_) return true;
+        } else {
+          ++metrics_.storage_completed;
+          if (notice.flushed) ++metrics_.storage_flushes;
+          if (!notice.completion.success) ++metrics_.storage_errors;
+          owner_events_.push_back(std::move(notice.completion));
+        }
       }
     }
 
@@ -558,67 +907,107 @@ class NodeHost::Impl {
     return activity;
   }
 
-  void handle_effects(std::vector<RaftEffect> effects) {
-    for (RaftEffect& effect : effects) {
-      std::visit(
-          [this](auto& value) {
-            using T = std::decay_t<decltype(value)>;
-            if constexpr (std::is_same_v<T, PersistEffect>) {
-              ++metrics_.storage_submitted;
-              if (!storage_->enqueue(
-                      StorageTask{value.op_id, std::move(value.batch)})) {
-                ++metrics_.storage_errors;
-                if (owner_events_.size() <
-                    config_.limits.max_owner_events) {
-                  owner_events_.push_front(StorageComplete{
-                      value.op_id, false, "bounded storage queue unavailable"});
-                }
-              }
-            } else if constexpr (std::is_same_v<T, SendEffect>) {
-              auto encoded =
-                  codec::encode_message(value.envelope.message, config_.codec);
-              if (!encoded) {
-                ++metrics_.tcp_error_drops;
-                fatal_error_ = true;
-                running_ = false;
-                tcp_->stop();
-                storage_->stop();
-                return;
-              }
-              const TcpSendResult result =
-                  tcp_->send(value.envelope.to, *encoded);
-              switch (result.status) {
-                case TcpSendStatus::queued:
-                  ++metrics_.tcp_messages_queued;
-                  break;
-                case TcpSendStatus::would_block:
-                  ++metrics_.tcp_backpressure_drops;
-                  break;
-                case TcpSendStatus::down:
-                  ++metrics_.tcp_down_drops;
-                  break;
-                case TcpSendStatus::error:
-                  ++metrics_.tcp_error_drops;
-                  break;
-              }
-            } else if constexpr (std::is_same_v<T, ScheduleTimerEffect>) {
-              schedule_timer(value.timer);
-            } else if constexpr (std::is_same_v<T, ClientReplyEffect>) {
-              outstanding_tokens_.erase(value.reply.token);
-              if (replies_.size() < config_.limits.max_client_slots) {
-                replies_.push_back(std::move(value.reply));
-                ++metrics_.client_replies;
-              }
-            } else if constexpr (std::is_same_v<T, TraceEffect>) {
-              if (traces_.size() < config_.limits.max_trace_records) {
-                traces_.push_back(std::move(value.record));
-              } else {
-                ++metrics_.trace_drops;
+  void dispatch_effect(RaftEffect& effect) {
+    std::visit(
+        [this](auto& value) {
+          using T = std::decay_t<decltype(value)>;
+          if constexpr (std::is_same_v<T, PersistEffect>) {
+            ++metrics_.storage_submitted;
+            const StorageEnqueueResult enqueued = storage_->enqueue(
+                StorageTask{value.op_id, std::move(value.batch)});
+            metrics_.storage_task_queue_high_water =
+                std::max(metrics_.storage_task_queue_high_water,
+                         enqueued.queue_depth);
+            if (!enqueued.accepted) {
+              ++metrics_.storage_errors;
+              if (config_.group_commit.enabled) {
+                fail_group_storage();
+              } else if (owner_events_.size() <
+                         config_.limits.max_owner_events) {
+                owner_events_.push_front(StorageComplete{
+                    value.op_id, false, "bounded storage queue unavailable"});
               }
             }
-          },
-          effect);
+          } else if constexpr (std::is_same_v<T, SendEffect>) {
+            auto encoded =
+                codec::encode_message(value.envelope.message, config_.codec);
+            if (!encoded) {
+              ++metrics_.tcp_error_drops;
+              fail_transport();
+              return;
+            }
+            const TcpSendResult result =
+                tcp_->send(value.envelope.to, *encoded);
+            switch (result.status) {
+              case TcpSendStatus::queued:
+                ++metrics_.tcp_messages_queued;
+                break;
+              case TcpSendStatus::would_block:
+                ++metrics_.tcp_backpressure_drops;
+                break;
+              case TcpSendStatus::down:
+                ++metrics_.tcp_down_drops;
+                break;
+              case TcpSendStatus::error:
+                ++metrics_.tcp_error_drops;
+                break;
+            }
+          } else if constexpr (std::is_same_v<T, ScheduleTimerEffect>) {
+            schedule_timer(value.timer);
+          } else if constexpr (std::is_same_v<T, ClientReplyEffect>) {
+            outstanding_tokens_.erase(value.reply.token);
+            if (replies_.size() < config_.limits.max_client_slots) {
+              replies_.push_back(std::move(value.reply));
+              ++metrics_.client_replies;
+            }
+          } else if constexpr (std::is_same_v<T, TraceEffect>) {
+            if (traces_.size() < config_.limits.max_trace_records) {
+              traces_.push_back(std::move(value.record));
+            } else {
+              ++metrics_.trace_drops;
+            }
+          }
+        },
+        effect);
+  }
+
+  void handle_effects(std::vector<RaftEffect> effects) {
+    StorageOpId effect_dependency = last_submitted_operation_;
+    if (config_.group_commit.enabled) {
+      for (const RaftEffect& effect : effects) {
+        if (const auto* persist = std::get_if<PersistEffect>(&effect)) {
+          effect_dependency = std::max(effect_dependency, persist->op_id);
+        }
+      }
     }
+    if (config_.group_commit.enabled &&
+        effect_dependency > last_submitted_operation_) {
+      // Raft mutates its speculative state before returning PersistEffect. The
+      // public snapshot still describes the last opened durability barrier.
+      last_submitted_operation_ = effect_dependency;
+      group_barrier_active_ = true;
+    }
+
+    for (RaftEffect& effect : effects) {
+      const bool persist = std::holds_alternative<PersistEffect>(effect);
+      if (config_.group_commit.enabled && group_barrier_active_ && !persist) {
+        if (quarantined_effects_.size() >=
+            config_.limits.max_group_quarantined_effects) {
+          ++metrics_.storage_errors;
+          fail_group_storage();
+          break;
+        }
+        quarantined_effects_.push_back(
+            QuarantinedEffect{effect_dependency, std::move(effect)});
+        metrics_.storage_quarantine_high_water =
+            std::max(metrics_.storage_quarantine_high_water,
+                     quarantined_effects_.size());
+      } else {
+        dispatch_effect(effect);
+      }
+      if (!running_) break;
+    }
+    refresh_published_status();
     record_queue_depths();
   }
 
@@ -631,15 +1020,20 @@ class NodeHost::Impl {
   std::set<ClientToken> outstanding_tokens_;
   std::deque<ClientReply> replies_;
   std::deque<TraceRecord> traces_;
+  std::vector<QuarantinedEffect> quarantined_effects_;
   HostTimer election_timer_;
   HostTimer heartbeat_timer_;
   NodeHostMetrics metrics_;
+  NodeHostStatus published_status_;
   ClientToken next_client_token_{1};
   std::uint64_t random_state_{};
+  StorageOpId last_submitted_operation_{};
+  StorageOpId durable_operation_through_{};
   std::thread::id owner_thread_;
   bool started_{};
   bool running_{};
   bool fatal_error_{};
+  bool group_barrier_active_{};
 };
 
 NodeHost::NodeHost(NodeHostConfig config)
@@ -667,6 +1061,10 @@ std::vector<ClientReply> NodeHost::poll_replies(std::size_t maximum) {
 
 std::vector<TraceRecord> NodeHost::poll_traces(std::size_t maximum) {
   return impl_->poll_traces(maximum);
+}
+
+bool NodeHost::set_peer_partitioned(NodeId peer, bool partitioned) noexcept {
+  return impl_->set_peer_partitioned(peer, partitioned);
 }
 
 bool NodeHost::running() const noexcept { return impl_->running(); }

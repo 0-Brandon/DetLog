@@ -99,11 +99,13 @@ void test_roundtrip_and_group_flush() {
 
   {
     Wal wal(path, kIdentity);
+    const std::uint64_t before_bytes = wal.state().file_bytes;
     const auto appended = wal.append_group(batches);
     REQUIRE(appended.first_frame_sequence == 1);
     REQUIRE(appended.last_frame_sequence == 2);
     REQUIRE(appended.durable);
     const auto state = wal.state();
+    REQUIRE(appended.bytes_written == state.file_bytes - before_bytes);
     REQUIRE(state.hard_state == *first.hard_state);
     REQUIRE(state.entries ==
             std::vector<LogEntry>({first.entries[0], second.entries[0]}));

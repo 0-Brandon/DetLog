@@ -39,6 +39,10 @@ makes all preceding completed writes stable. A crash invalidates pending
 completions and may retain a configured prefix of the unstable tail or active
 write. Flushed bytes are never changed by an ordinary crash.
 
+Write and flush latency can be changed for one live node. The override affects
+only subsequent submissions, is retained in that fixed node's runtime state,
+and is recorded as `storage_latency_set` with both virtual-time values.
+
 Media corruption of flushed bytes is a separate parser/recovery test. It is
 detected and fails the node closed rather than being treated as a recoverable
 crash tail.

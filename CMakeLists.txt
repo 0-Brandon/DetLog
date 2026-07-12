@@ -55,6 +55,7 @@ endfunction()
 detlog_library(detlog_codec src/codec.cpp)
 detlog_library(detlog_storage src/wal.cpp)
 detlog_library(detlog_core src/state_machine.cpp src/raft.cpp)
+detlog_library(detlog_reference src/reference_model.cpp)
 detlog_library(detlog_sim src/simulator.cpp)
 target_link_libraries(detlog_sim PUBLIC detlog_codec)
 detlog_library(detlog_tcp src/tcp_transport.cpp)
@@ -109,6 +110,21 @@ if(BUILD_TESTING)
   endif()
 
   if(TARGET detlog_cluster AND
+     EXISTS "${PROJECT_SOURCE_DIR}/tests/reference_model_tests.cpp")
+    add_executable(reference_model_tests tests/reference_model_tests.cpp)
+    target_link_libraries(reference_model_tests PRIVATE
+      detlog_reference detlog_cluster)
+    add_test(NAME reference_model COMMAND reference_model_tests)
+  endif()
+
+  if(TARGET detlog_cluster AND
+     EXISTS "${PROJECT_SOURCE_DIR}/tests/failure_history_tests.cpp")
+    add_executable(failure_history_tests tests/failure_history_tests.cpp)
+    target_link_libraries(failure_history_tests PRIVATE detlog_cluster)
+    add_test(NAME failure_history COMMAND failure_history_tests)
+  endif()
+
+  if(TARGET detlog_cluster AND
      EXISTS "${PROJECT_SOURCE_DIR}/fuzz/scenario_fuzz.cpp")
     add_executable(scenario_fuzz_smoke fuzz/scenario_fuzz.cpp)
     target_compile_definitions(scenario_fuzz_smoke PRIVATE
@@ -121,6 +137,22 @@ if(BUILD_TESTING)
     add_executable(node_host_tests tests/node_host_tests.cpp)
     target_link_libraries(node_host_tests PRIVATE detlog_runtime)
     add_test(NAME node_host COMMAND node_host_tests)
+  endif()
+
+  if(TARGET detlog_runtime AND
+     EXISTS "${PROJECT_SOURCE_DIR}/tests/node_host_group_commit_tests.cpp")
+    add_executable(node_host_group_commit_tests
+      tests/node_host_group_commit_tests.cpp)
+    target_link_libraries(node_host_group_commit_tests PRIVATE detlog_runtime)
+    add_test(NAME node_host_group_commit COMMAND node_host_group_commit_tests)
+  endif()
+
+  if(TARGET detlog_runtime AND
+     EXISTS "${PROJECT_SOURCE_DIR}/tests/node_host_partition_tests.cpp")
+    add_executable(node_host_partition_tests
+      tests/node_host_partition_tests.cpp)
+    target_link_libraries(node_host_partition_tests PRIVATE detlog_runtime)
+    add_test(NAME node_host_partition COMMAND node_host_partition_tests)
   endif()
 endif()
 

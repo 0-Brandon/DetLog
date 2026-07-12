@@ -374,10 +374,14 @@ struct DeterministicCluster::Impl {
 
   struct NodeRuntime {
     NodeRuntime(RaftConfig node_config, WalIdentity node_identity,
-                std::uint64_t random_seed, std::uint64_t random_stream)
+                std::uint64_t random_seed, std::uint64_t random_stream,
+                Tick initial_storage_write_latency,
+                Tick initial_storage_flush_latency)
         : raft_config(std::move(node_config)),
           identity(node_identity),
-          election_random(random_seed, random_stream) {}
+          election_random(random_seed, random_stream),
+          storage_write_latency(initial_storage_write_latency),
+          storage_flush_latency(initial_storage_flush_latency) {}
 
     RaftConfig raft_config;
     WalIdentity identity;
@@ -386,6 +390,8 @@ struct DeterministicCluster::Impl {
     sim::Pcg32 election_random;
     std::optional<TimerBinding> election_timer;
     std::optional<TimerBinding> heartbeat_timer;
+    Tick storage_write_latency{};
+    Tick storage_flush_latency{};
   };
 
   enum class PersistStage : std::uint8_t { write, flush };
@@ -520,7 +526,8 @@ void DeterministicCluster::Impl::initialize() {
     const auto [position, inserted] = nodes.try_emplace(
         id, std::move(raft_config), identity,
         mix_seed(config.seed ^ static_cast<std::uint64_t>(id)),
-        mix_seed(config.seed + static_cast<std::uint64_t>(id)));
+        mix_seed(config.seed + static_cast<std::uint64_t>(id)),
+        config.storage_write_latency, config.storage_flush_latency);
     if (!inserted || !simulator.register_node(id)) {
       throw std::logic_error("failed to register cluster node");
     }
@@ -742,7 +749,7 @@ void DeterministicCluster::Impl::handle_persist(
   try {
     auto encoded = encode_wal_frame(found->wal_state, effect.batch, config.wal);
     const auto submitted = simulator.submit_write(
-        node, encoded.bytes, config.storage_write_latency);
+        node, encoded.bytes, found->storage_write_latency);
     sync_simulator_trace();
     if (!submitted) {
       fail_storage(node, effect.op_id, storage_status_name(submitted.status));
@@ -906,8 +913,14 @@ void DeterministicCluster::Impl::handle_storage_event(
   }
 
   if (bridge.stage == PersistStage::write) {
+    const auto* node = runtime(event.node);
+    if (node == nullptr || !node->raft || !simulator.is_alive(event.node)) {
+      fail_storage(event.node, bridge.raft_operation,
+                   "storage node became unavailable before flush");
+      return;
+    }
     const auto flush =
-        simulator.submit_flush(event.node, config.storage_flush_latency);
+        simulator.submit_flush(event.node, node->storage_flush_latency);
     sync_simulator_trace();
     if (!flush) {
       fail_storage(event.node, bridge.raft_operation,
@@ -1529,6 +1542,23 @@ bool DeterministicCluster::duplicate_next(NodeId from, NodeId to,
     impl_->verify_if_enabled();
   }
   return changed;
+}
+
+bool DeterministicCluster::set_storage_latency(NodeId node, Tick write_ticks,
+                                               Tick flush_ticks) {
+  auto* found = impl_->runtime(node);
+  if (found == nullptr || !found->raft ||
+      !impl_->simulator.is_alive(node)) {
+    return false;
+  }
+  found->storage_write_latency = write_ticks;
+  found->storage_flush_latency = flush_ticks;
+  impl_->record(ClusterTraceSource::adapter, "storage_latency_set", node, 0,
+                found->raft->current_term(), 0, write_ticks, 0,
+                "write_ticks=" + std::to_string(write_ticks) +
+                    " flush_ticks=" + std::to_string(flush_ticks));
+  impl_->verify_if_enabled();
+  return true;
 }
 
 bool DeterministicCluster::fail_next_storage_write(NodeId node) {

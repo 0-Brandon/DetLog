@@ -12,7 +12,7 @@ new file and retain it as the raw result; diagnostics go to stderr.
 | Mode | healthy | leader-crash | partition | slow-follower | slow-fsync |
 |---|---:|---:|---:|---:|---:|
 | `sim` | yes | yes | yes | yes | yes |
-| `tcp` | yes | yes | unsupported | unsupported | unsupported |
+| `tcp` | yes | yes | yes | unsupported | unsupported |
 
 `sim` uses `DeterministicCluster`, virtual time, the production codec/WAL byte
 format, and deterministic fault controls. `tcp` creates multiple `NodeHost`
@@ -21,17 +21,21 @@ and communicates through real loopback TCP sockets. This avoids process-launch
 noise while measuring the real runtime adapter. The `detlog-node` demo remains
 the separate-process demonstration.
 
-TCP partition, slow-peer, and slow-fsync runs are deliberately rejected with
-exit code 2 and an `unsupported` JSON record. The harness does not approximate
-those faults with sleeps or make claims about controls it does not possess.
+TCP slow-peer and slow-fsync runs are deliberately rejected with exit code 2
+and an `unsupported` JSON record. The harness does not approximate controls it
+does not possess.
 
 Scenario behavior:
 
 - `leader-crash` stops the ready leader while a closed-loop wave is in flight,
   retries the ambiguous commands with the same request IDs, and measures from
   fault injection to the first later success.
-- `partition` isolates the simulated leader in both directions for 50 virtual
-  ticks and then heals it.
+- `partition` isolates the simulated leader in both directions for 150 virtual
+  ticks and then heals it. TCP mode uses a real bidirectional transport cut for
+  `--partition-ms` wall-clock milliseconds (default 1000), records its measured
+  duration, and keeps the run alive through the complete interval. Both modes
+  require replacement election and a later successful commit while the cut is
+  still active; otherwise the run exits nonzero.
 - `slow-follower` adds deterministic bidirectional delay to one simulated
   follower while keeping election bounds large enough to avoid turning the
   scenario into continuous elections.
@@ -72,6 +76,10 @@ build\release\detlog-bench.exe --mode tcp --nodes 3 --clients 3 `
 Valid node counts are 3 and 5; client counts are 1, 3, and 5; payload values
 are 64, 1024, and 16384 bytes. The payload is the command value size, so the
 encoded command also includes its fixed fields and key.
+Leader-crash and partition runs require more operations than clients so the
+fault is guaranteed to interrupt a live closed-loop wave. A supported fault
+run exits nonzero unless injection, replacement election, and a later success
+were all observed; a partition must also complete its full heal interval.
 
 Each client owns one session and has at most one unresolved logical command.
 Its sequence advances only after an `ok` reply. A timeout, leader failure,
@@ -79,13 +87,20 @@ Its sequence advances only after an `ok` reply. A timeout, leader failure,
 a closed-loop workload; it does not hide overload behind an unbounded producer
 queue.
 
+TCP accepts `--fsync-policy flush-every|group`. Safe group mode additionally
+uses `--group-size` and `--group-delay-ms` to bound staged WAL frames and the
+maximum time before their shared durability barrier. The default remains
+flush-every. Simulator storage is a separate virtual model and rejects runtime
+group mode.
+
 ## JSONL schema
 
 Each run contains:
 
 1. A `manifest` record with OS, compiler, C++ level, hardware concurrency,
-   mode, scenario, seed/trial, workload dimensions, and whether TCP nodes share
-   a process. Set `DETLOG_BUILD_COMMIT` and `DETLOG_BUILD_FLAGS` in the
+   mode, scenario, seed/trial, workload dimensions, fsync/group bounds, timed
+   partition configuration, and whether TCP nodes share a process. Set
+   `DETLOG_BUILD_COMMIT` and `DETLOG_BUILD_FLAGS` in the
    environment to embed the exact revision and compiler flags; otherwise the
    manifest records those fields as `not_provided` rather than guessing.
 2. One `operation` record per requested operation with client/session sequence,
@@ -93,8 +108,8 @@ Each run contains:
    status.
 3. A `summary` record with successes/failures, p50/p95/p99, elections, aggregate
    retries/backpressure, throughput, coarse process CPU time, process peak
-   resident memory, queue high-water marks, and two separate fault durations
-   where a fault was injected:
+   resident memory, queue high-water marks, the measured `fault_duration`, and
+   two separate recovery durations where a fault was injected:
    `replacement_leader_ready_duration` stops when a ready leader with a
    different node ID is observed, while `recovery_to_first_success` stops only
    after a later command has committed and replied successfully.
@@ -133,8 +148,8 @@ network bytes, and pending-storage bytes observed at deterministic event
 boundaries. Queue families that do not apply to a mode are zero; rejection and
 backpressure counters remain separate from depths.
 
-`replacement_leader_ready_duration` is emitted only for leader-crash and
-simulated-partition runs and is `null` if no different ready leader was observed
+`replacement_leader_ready_duration` is emitted for leader-crash and partition
+runs in both modes and is `null` if no different ready leader was observed
 before the bounded run ended. `recovery_to_first_success` remains separate and
 normally includes election plus replication, WAL durability, application, and
 reply delivery. Healthy and slow-path scenarios emit both fault fields as
@@ -146,9 +161,11 @@ and a nonzero exit code while preserving everything already written.
 
 ## Reproduction matrices
 
-The matrix scripts run all documented supported combinations. With their
-defaults (three trials and 1000 operations), they run 270 simulator trials and
-108 TCP trials. Use smaller values for a smoke campaign.
+The main matrix scripts run all documented supported scenario combinations
+with flush-every runtime storage. With their defaults (three trials and 1000
+operations), they run 270 simulator trials and 162 TCP trials. Use smaller
+values for a smoke campaign, but keep operations above five because the fault
+must interrupt a live wave even in the five-client cells.
 
 Linux/macOS:
 
@@ -177,6 +194,28 @@ Each output directory contains:
 
 The scripts stop on the first failed supported run but retain all raw output
 written before that point.
+
+## End-to-end runtime fsync matrix
+
+The runtime fsync runners compare actual `NodeHost` durability policies over
+real loopback TCP and distinct file-backed WALs. Defaults cover healthy and
+leader-crash histories, 3/5 nodes, 1/3/5 clients, all payload sizes,
+flush-every, group-of-2, group-of-5, and three trials (324 runs):
+
+```sh
+scripts/run_runtime_fsync_matrix.sh build/release/detlog-bench \
+  bench-results/runtime-fsync 3 1000
+```
+
+```powershell
+scripts\run_runtime_fsync_matrix.ps1 `
+  -Executable build\release\detlog-bench.exe `
+  -OutputDirectory bench-results\runtime-fsync `
+  -Repetitions 3 -Operations 1000 -GroupSizes @(2,5)
+```
+
+The manifest and chart labels retain policy, group bound, and group delay so
+results with different durability contracts cannot be silently aggregated.
 
 ## WAL durability and recovery scaling
 
@@ -222,13 +261,15 @@ scripts\run_wal_bench_matrix.ps1 `
 
 The runners preserve `raw-includes-nondurable.jsonl`, `stderr.log`, a matrix
 manifest, `summary-includes-nondurable.csv`, and
-`wal-figures-includes-nondurable.svg`. The deliberately explicit names warn
-that safe results share the artifacts with the unsafe policy. The WAL
+`wal-figures-includes-nondurable.svg`. The raw stream and derived-output names
+explicitly warn that safe results share those artifacts with the unsafe
+policy; every raw record and the matrix manifest carry the precise durability
+label or policy. The WAL
 derivation tool validates manifest/summary pairs, keeps builds and source files
 separate, and plots mean values with min-max trial whiskers. The WAL manifest
-also records platform/compiler/build provenance. This storage-only experiment
-does not imply that the current one-persist-at-a-time `NodeHost` uses WAL group
-commit.
+also records platform/compiler/build provenance. This remains a storage
+microbenchmark; use the runtime fsync matrix above for end-to-end group-commit
+claims.
 
 ## Plot cluster benchmark raw data
 
@@ -251,8 +292,47 @@ zero failures. Trials are aggregated only within one input file; separate raw
 files are never silently averaged across machines or experiments, even when
 their build metadata matches.
 
-Always publish raw JSONL and the matrix manifest alongside derived CSV/SVG
-files. Record the executable commit, build preset, compiler flags, machine,
-power settings, and background-load conditions outside the harness when
-running a reportable campaign. Repeated trials and variability matter more than
-a single best result.
+## Environment capture, validation, and packaging
+
+Capture the machine while the code commit is clean and before writing tracked
+evidence. On Windows, write the record under ignored `out` and supply the exact
+benchmark volume/storage description plus background-load notes:
+
+```powershell
+scripts\capture_benchmark_environment.ps1 `
+  -Output out\benchmark-environment.json `
+  -BuildFlags $env:DETLOG_BUILD_FLAGS `
+  -StorageDescription "D: Windows Storage Space (underlying devices listed)" `
+  -Notes "Balanced power plan; ordinary desktop background services"
+```
+
+Unix-like hosts use the matching schema and environment variables:
+
+```sh
+DETLOG_STORAGE_DESCRIPTION='model, filesystem, and mount' \
+DETLOG_BENCH_NOTES='power policy and background load' \
+scripts/capture_benchmark_environment.sh out/benchmark-environment.json
+```
+
+Every matrix runner refuses a nonempty output directory, streams each child
+record directly to the raw file, records `expected_runs`, and invokes the exact
+cardinality/pair validator before plotting. Revalidate and losslessly package
+completed directories with deterministic gzip plus per-directory checksums:
+
+```sh
+python3 scripts/validate_benchmark_artifacts.py bench-results/cluster \
+  bench-results/runtime-fsync bench-results/wal
+python3 scripts/package_benchmark_artifacts.py --remove-raw \
+  bench-results/cluster bench-results/runtime-fsync bench-results/wal
+```
+
+The validator accepts either the original `raw*.jsonl` stream or its
+deterministic `raw*.jsonl.gz` packaged form, so the published package can be
+checked directly without an extraction step. A WAL matrix's `raw_jsonl` field
+names the logical uncompressed stream; `.gz` is its lossless packaged encoding.
+Packaging an uncompressed stream intentionally requires `--remove-raw`, which
+prevents an ambiguous package from retaining both representations.
+
+Publish the matrix manifest, losslessly compressed raw JSONL, captured
+environment, derived CSV/SVG, diagnostics, and `SHA256SUMS` together. Repeated
+trials and reported variability matter more than a single best result.

@@ -20,6 +20,10 @@ CSV_FIELDS = [
     "hardware_threads",
     "build_commit",
     "build_flags",
+    "wal_flush_policy",
+    "wal_group_size",
+    "wal_group_delay_ms",
+    "tcp_partition_ms",
     "mode",
     "scenario",
     "nodes",
@@ -49,12 +53,21 @@ CSV_FIELDS = [
     "transport_backpressure",
     "transport_down_drops",
     "storage_errors",
+    "storage_flushes",
+    "storage_group_commits",
+    "storage_grouped_operations",
+    "storage_staged_operations",
+    "storage_group_max_size",
+    "storage_group_max_bytes",
+    "storage_task_queue_high_water",
+    "storage_quarantine_high_water",
     "owner_queue_high_water",
     "client_queue_high_water",
     "sim_event_queue_high_water",
     "sim_network_bytes_high_water",
     "sim_storage_bytes_high_water",
     "fault_at",
+    "fault_duration",
     "replacement_leader_ready_duration",
     "recovery_to_first_success",
     "status",
@@ -89,6 +102,10 @@ def load_summaries(paths: Iterable[Path]) -> list[dict[str, Any]]:
                             "hardware_threads",
                             "build_commit",
                             "build_flags",
+                            "wal_flush_policy",
+                            "wal_group_size",
+                            "wal_group_delay_ms",
+                            "tcp_partition_ms",
                         ):
                             combined[field] = manifest.get(field)
                     summaries.append(combined)
@@ -131,6 +148,10 @@ def aggregate(
             row.get("nodes", "?"),
             row.get("clients", "?"),
             row.get("payload_bytes", "?"),
+            row.get("wal_flush_policy", "?"),
+            row.get("wal_group_size", "?"),
+            row.get("wal_group_delay_ms", "?"),
+            row.get("tcp_partition_ms", "?"),
         )
         value = row.get("throughput")
         if isinstance(value, (int, float)) and math.isfinite(float(value)):
@@ -140,12 +161,26 @@ def aggregate(
         str, list[tuple[str, float, str, float, float, int]]
     ] = defaultdict(list)
     for key, values in sorted(grouped.items(), key=lambda item: item[0]):
-        unit, provenance, mode, scenario, nodes, clients, payload = key
+        (
+            unit,
+            provenance,
+            mode,
+            scenario,
+            nodes,
+            clients,
+            payload,
+            policy,
+            group,
+            group_delay,
+            partition_ms,
+        ) = key
         provenance_label = Path(str(provenance[0])).name
         if provenance[4] not in (None, "not_provided"):
             provenance_label += f"@{str(provenance[4])[:12]}"
         label = (
             f"{mode}/{scenario} n{nodes} c{clients} p{payload} "
+            f"fsync={policy} g{group} delay={group_delay}ms "
+            f"cut={partition_ms}ms "
             f"build={provenance_label}"
         )
         panels[str(unit)].append(
