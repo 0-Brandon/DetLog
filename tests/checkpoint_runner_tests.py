@@ -10,6 +10,8 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 from types import SimpleNamespace
 import unittest
 from unittest import mock
@@ -280,6 +282,26 @@ def bindings(plan: tuple[runner.PlannedRun, ...]) -> dict[str, object]:
 
 
 class CheckpointRunnerTests(unittest.TestCase):
+    def test_atomic_state_update_waits_out_a_transient_reader(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            target = Path(temporary) / "state.json"
+            runner.write_atomic_json(target, {"value": 1})
+            descriptor = runner.open_regular_fd(target, os.O_RDONLY, "test state")
+
+            def release() -> None:
+                time.sleep(0.1)
+                os.close(descriptor)
+
+            closer = threading.Thread(target=release)
+            closer.start()
+            try:
+                runner.write_atomic_json(target, {"value": 2})
+            finally:
+                closer.join()
+            self.assertEqual(
+                json.loads(target.read_text(encoding="ascii")), {"value": 2}
+            )
+
     def test_artifact_validator_enforces_order_and_seed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)

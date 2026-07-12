@@ -303,6 +303,37 @@ def fsync_directory(path: Path) -> None:
         os.close(descriptor)
 
 
+def replace_atomic(source: Path, destination: Path) -> None:
+    if os.name != "nt":
+        os.replace(source, destination)
+        return
+
+    movefile_replace_existing = 0x00000001
+    movefile_write_through = 0x00000008
+    transient_errors = {5, 32, 33}
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.MoveFileExW.argtypes = (
+        ctypes.c_wchar_p,
+        ctypes.c_wchar_p,
+        ctypes.c_ulong,
+    )
+    kernel32.MoveFileExW.restype = ctypes.c_int
+    delay = 0.01
+    for attempt in range(50):
+        if kernel32.MoveFileExW(
+            str(source),
+            str(destination),
+            movefile_replace_existing | movefile_write_through,
+        ):
+            return
+        error = ctypes.get_last_error()
+        if error not in transient_errors or attempt == 49:
+            raise ctypes.WinError(error)
+        time.sleep(delay)
+        delay = min(delay * 1.5, 0.2)
+    raise CampaignError(f"cannot atomically replace {destination}")
+
+
 def write_atomic_bytes(path: Path, value: bytes) -> None:
     require_real_directory(path.parent, "atomic-write parent")
     descriptor, temporary_name = tempfile.mkstemp(
@@ -315,7 +346,7 @@ def write_atomic_bytes(path: Path, value: bytes) -> None:
             output.write(value)
             output.flush()
             os.fsync(output.fileno())
-        os.replace(temporary, path)
+        replace_atomic(temporary, path)
         fsync_directory(path.parent)
     finally:
         if descriptor >= 0:
