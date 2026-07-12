@@ -11,6 +11,28 @@ permissions:
   contents: read
 
 jobs:
+  artifact-tooling:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile artifact tools
+        run: >-
+          python -m py_compile
+          scripts/run_checkpointed_campaign.py
+          scripts/validate_benchmark_artifacts.py
+          scripts/package_benchmark_artifacts.py
+          tests/checkpoint_runner_tests.py
+      - name: Test checkpoint transactions
+        run: python tests/checkpoint_runner_tests.py
+
   linux-build:
     runs-on: ubuntu-latest
     timeout-minutes: 20

@@ -4,6 +4,7 @@ set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 build_dir="$root/out/manual-debug"
 cxx=${CXX:-c++}
+python=${PYTHON:-python3}
 
 mkdir -p "$build_dir"
 
@@ -26,5 +27,7 @@ if [ -f "$scenario_fuzz" ]; then
     -pthread -o "$executable"
   "$executable"
 fi
+
+"$python" "$root/tests/checkpoint_runner_tests.py"
 
 echo "All standalone tests passed."

@@ -178,11 +178,14 @@ The main matrix scripts run all documented supported scenario combinations
 with flush-every runtime storage. With their defaults (three trials and 1000
 operations), they run 270 simulator trials and 162 TCP trials. Use smaller
 values for a smoke campaign, but keep operations above five because the fault
-must interrupt a live wave even in the five-client cells.
+must interrupt a live wave even in the five-client cells. The checkpoint runner
+accepts 6 through 100,000 operations per run; this bounds recovery memory while
+the committed campaign itself is verified one run at a time.
 
 Linux/macOS:
 
 ```sh
+ENVIRONMENT=out/benchmark-environment.json MAX_NEW_RUNS=50 \
 scripts/run_bench_matrix.sh build/release/detlog-bench \
   bench-results/smoke 1 20
 ```
@@ -193,7 +196,8 @@ PowerShell:
 scripts\run_bench_matrix.ps1 `
   -Executable build\release\detlog-bench.exe `
   -OutputDirectory bench-results\smoke `
-  -Repetitions 1 -Operations 20
+  -Repetitions 1 -Operations 20 `
+  -Environment out\benchmark-environment.json -MaxNewRuns 50
 ```
 
 Each output directory contains:
@@ -201,12 +205,36 @@ Each output directory contains:
 - `raw.jsonl`: concatenated, unchanged benchmark records;
 - `stderr.log`: diagnostics from every run;
 - `matrix.json`: the exact requested matrix and unsupported TCP scenarios;
+- `environment.json`: the immutable environment record bound to the campaign;
 - `summary.csv`: one row per summary;
 - `throughput.svg`: trial-mean throughput bars with min-max whiskers, separated
   by unit.
 
-The scripts stop on the first failed supported run but retain all raw output
-written before that point.
+Each successful trial is durably committed through an atomic checkpoint. If the
+shell, workstation, or child process is interrupted, rerun PowerShell with
+`-Resume` (or Unix with `RESUME=1`) and the same arguments. Resume verifies the
+exact matrix, ordered run/seed plan, executable hash, environment, TEMP/TMP,
+committed byte prefix, and per-run hash chain. Uncommitted tail bytes are moved
+under ignored `out/benchmark-interruptions` before a durable successful child
+result is replayed into the checkpoint.
+A child that exits nonzero receives a failure marker and is not treated as an
+interruption or silently retried.
+
+`-MaxNewRuns`/`MAX_NEW_RUNS` makes a clean, successful pause after that many
+newly committed trials; resume later with the explicit same output directory.
+The runner starts each benchmark behind a launch gate: its supervisor PID is
+durably published before the gate opens, so a resume cannot overlap that child.
+Any transaction whose supervisor dies before its exit result is durable is
+outcome-ambiguous, even if its captured output is partial. Resume refuses to
+guess. After inspection, `-AcknowledgeAmbiguousRun` (or
+`ACKNOWLEDGE_AMBIGUOUS_RUN=1`) explicitly quarantines that transaction before
+retrying it.
+
+The captured environment argument is mandatory. The runner copies it into the
+campaign and refuses to start unless its clean build commit, flags, and TEMP
+directory match the process environment. Each child receives a unique,
+runner-owned subdirectory beneath that captured TEMP root, so interrupted WAL
+directories can be cleaned without touching another campaign.
 
 ## End-to-end runtime fsync matrix
 
@@ -216,6 +244,7 @@ leader-crash histories, 3/5 nodes, 1/3/5 clients, all payload sizes,
 flush-every, group-of-2, group-of-5, and three trials (324 runs):
 
 ```sh
+ENVIRONMENT=out/benchmark-environment.json \
 scripts/run_runtime_fsync_matrix.sh build/release/detlog-bench \
   bench-results/runtime-fsync 3 1000
 ```
@@ -224,7 +253,8 @@ scripts/run_runtime_fsync_matrix.sh build/release/detlog-bench \
 scripts\run_runtime_fsync_matrix.ps1 `
   -Executable build\release\detlog-bench.exe `
   -OutputDirectory bench-results\runtime-fsync `
-  -Repetitions 3 -Operations 1000 -GroupSizes @(2,5)
+  -Repetitions 3 -Operations 1000 -GroupSizes @(2,5) `
+  -Environment out\benchmark-environment.json
 ```
 
 The manifest and chart labels retain policy, group bound, and group delay so
@@ -262,6 +292,7 @@ build/release/detlog-wal-bench --entries 1000 --payload 1024 --trial 1 \
 Run repeated size/policy matrices:
 
 ```sh
+ENVIRONMENT=out/benchmark-environment.json \
 scripts/run_wal_bench_matrix.sh build/release/detlog-wal-bench \
   bench-results/wal-smoke 3
 ```
@@ -269,7 +300,8 @@ scripts/run_wal_bench_matrix.sh build/release/detlog-wal-bench \
 ```powershell
 scripts\run_wal_bench_matrix.ps1 `
   -Executable build\release\detlog-wal-bench.exe `
-  -OutputDirectory bench-results\wal-smoke -Repetitions 3
+  -OutputDirectory bench-results\wal-smoke -Repetitions 3 `
+  -Environment out\benchmark-environment.json
 ```
 
 The runners preserve `raw-includes-nondurable.jsonl`, `stderr.log`, a matrix
@@ -327,10 +359,15 @@ DETLOG_BENCH_NOTES='power policy and background load' \
 scripts/capture_benchmark_environment.sh out/benchmark-environment.json
 ```
 
-Every matrix runner refuses a nonempty output directory, streams each child
-record directly to the raw file, records `expected_runs`, and invokes the exact
-cardinality/pair validator before plotting. Revalidate and losslessly package
-completed directories with deterministic gzip plus per-directory checksums:
+Every matrix runner refuses a nonempty output directory unless resume is
+explicit, records `expected_runs`, and invokes the strict order/seed/cardinality
+validator before plotting. Bootstrap and active markers are cleared only after
+their respective durable transitions. The checkpoint is replaced by
+`campaign-complete.json` only after full validation and plot generation. The
+exclusive lock is permanent under ignored
+`out/benchmark-locks`, outside the artifact directory. Revalidate and
+losslessly package completed directories
+with deterministic gzip plus per-directory checksums:
 
 ```sh
 python3 scripts/validate_benchmark_artifacts.py bench-results/cluster \
@@ -345,6 +382,9 @@ checked directly without an extraction step. A WAL matrix's `raw_jsonl` field
 names the logical uncompressed stream; `.gz` is its lossless packaged encoding.
 Packaging an uncompressed stream intentionally requires `--remove-raw`, which
 prevents an ambiguous package from retaining both representations.
+The packager first verifies the resumable runner's `campaign-complete.json`
+inventory against the uncompressed files, then removes that pre-package state
+before replacing raw JSONL with deterministic gzip and writing final checksums.
 
 Publish the matrix manifest, losslessly compressed raw JSONL, captured
 environment, derived CSV/SVG, diagnostics, and `SHA256SUMS` together. Repeated

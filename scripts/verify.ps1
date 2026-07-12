@@ -70,4 +70,10 @@ if (Test-Path -LiteralPath $scenarioFuzz -PathType Leaf) {
   }
 }
 
+Write-Host "Running checkpoint_runner_tests.py"
+& python (Join-Path $root "tests\checkpoint_runner_tests.py")
+if ($LASTEXITCODE -ne 0) {
+  throw "Tests failed in checkpoint_runner_tests.py"
+}
+
 Write-Host "All standalone tests passed."

@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import gzip
 import hashlib
+import json
 from pathlib import Path
 
 from validate_benchmark_artifacts import validate_directory
@@ -47,6 +48,67 @@ def artifact_files(directory: Path) -> list[Path]:
     return sorted(files)
 
 
+def consume_completion_marker(directory: Path) -> None:
+    marker = directory / "campaign-complete.json"
+    if not marker.exists():
+        return
+    try:
+        completion = json.loads(marker.read_text(encoding="ascii"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise ValueError(f"{marker}: invalid completion marker: {error}") from error
+    if (
+        not isinstance(completion, dict)
+        or completion.get("schema")
+        != "detlog-benchmark-campaign-complete/v1"
+        or not isinstance(completion.get("files"), dict)
+    ):
+        raise ValueError(f"{marker}: unsupported completion marker")
+    matrix_paths = [
+        path
+        for path in (directory / "matrix.json", directory / "matrix-manifest.json")
+        if path.is_file() and not path.is_symlink()
+    ]
+    if len(matrix_paths) != 1:
+        raise ValueError(f"{marker}: completion marker needs one matrix")
+    matrix = json.loads(matrix_paths[0].read_text(encoding="utf-8"))
+    if matrix.get("schema") == "detlog-wal-bench-matrix/v1":
+        expected_names = {
+            "matrix-manifest.json",
+            matrix.get("raw_jsonl"),
+            matrix.get("diagnostics"),
+            matrix.get("derived_csv"),
+            matrix.get("derived_svg"),
+            "environment.json",
+        }
+    else:
+        expected_names = {
+            "matrix.json",
+            "raw.jsonl",
+            "stderr.log",
+            "summary.csv",
+            "throughput.svg",
+            "environment.json",
+        }
+    if set(completion["files"]) != expected_names:
+        raise ValueError(f"{marker}: completion inventory is not exact")
+    for name, expected in completion["files"].items():
+        if (
+            not isinstance(name, str)
+            or Path(name).name != name
+            or not isinstance(expected, dict)
+        ):
+            raise ValueError(f"{marker}: unsafe completion inventory entry")
+        path = directory / name
+        if path.is_symlink() or not path.is_file():
+            raise ValueError(f"{marker}: completed file is missing: {name!r}")
+        if path.stat().st_size != expected.get("bytes") or sha256(path) != expected.get(
+            "sha256"
+        ):
+            raise ValueError(f"{marker}: completed file changed: {name!r}")
+    marker.unlink()
+    print(f"verified and removed pre-package completion marker {marker}")
+
+
 def compress_jsonl(path: Path) -> Path:
     destination = path.with_suffix(path.suffix + ".gz")
     temporary = destination.with_suffix(destination.suffix + ".tmp")
@@ -82,6 +144,7 @@ def package(directory: Path, remove_raw: bool) -> None:
         f"validated {directory}: runs={result['runs']} "
         f"records={result['records']}"
     )
+    consume_completion_marker(directory)
     raw_files = sorted(directory.glob("raw*.jsonl"))
     if raw_files and not remove_raw:
         raise ValueError(

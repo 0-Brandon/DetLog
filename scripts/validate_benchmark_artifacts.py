@@ -6,11 +6,19 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
+import re
+import stat
 from pathlib import Path
 from typing import Any
 
 
 UINT64_MAX = (1 << 64) - 1
+PUBLICATION_FIELDS = (
+    "environment",
+    "runner",
+    "runner_commit",
+    "runner_sha256",
+)
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -21,6 +29,105 @@ def _load_json(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"{path}: manifest must be a JSON object")
     return value
+
+
+def _validate_publication_provenance(
+    directory: Path, matrix: dict[str, Any]
+) -> dict[str, Any] | None:
+    present = [field in matrix for field in PUBLICATION_FIELDS]
+    if not any(present):
+        return None
+    if not all(present):
+        missing = [
+            field
+            for field, field_present in zip(PUBLICATION_FIELDS, present)
+            if not field_present
+        ]
+        raise ValueError(
+            f"publication matrix must declare all provenance fields; "
+            f"missing={missing!r}"
+        )
+    if matrix.get("environment") != "environment.json":
+        raise ValueError(
+            "publication matrix environment must be 'environment.json'"
+        )
+
+    runner = matrix.get("runner")
+    if (
+        not isinstance(runner, str)
+        or not runner
+        or "\\" in runner
+        or re.match(r"^[A-Za-z]:", runner) is not None
+        or any(part in ("", ".", "..") for part in runner.split("/"))
+    ):
+        raise ValueError("publication matrix runner must be a safe relative path")
+    runner_commit = matrix.get("runner_commit")
+    if not isinstance(runner_commit, str) or re.fullmatch(
+        r"[0-9a-fA-F]{40}", runner_commit
+    ) is None:
+        raise ValueError("publication matrix runner_commit must be 40 hex digits")
+    runner_sha256 = matrix.get("runner_sha256")
+    if not isinstance(runner_sha256, str) or re.fullmatch(
+        r"[0-9a-fA-F]{64}", runner_sha256
+    ) is None:
+        raise ValueError("publication matrix runner_sha256 must be 64 hex digits")
+
+    environment_path = directory / "environment.json"
+    try:
+        environment_status = environment_path.lstat()
+    except OSError as error:
+        raise ValueError(
+            f"{directory}: publication environment file is missing: {error}"
+        ) from error
+    if environment_path.is_symlink() or not stat.S_ISREG(
+        environment_status.st_mode
+    ):
+        raise ValueError(
+            f"{environment_path}: publication environment must be a regular file"
+        )
+    environment = _load_json(environment_path)
+    if environment.get("schema") != "detlog-benchmark-environment/v1":
+        raise ValueError(
+            f"{environment_path}: unsupported benchmark environment schema"
+        )
+    if environment.get("worktree") != "clean":
+        raise ValueError(
+            f"{environment_path}: publication environment worktree must be clean"
+        )
+    build_commit = environment.get("build_commit")
+    if not isinstance(build_commit, str) or re.fullmatch(
+        r"[0-9a-fA-F]{40}", build_commit
+    ) is None:
+        raise ValueError(
+            f"{environment_path}: build_commit must be 40 hex digits"
+        )
+    build_flags = environment.get("build_flags")
+    if (
+        not isinstance(build_flags, str)
+        or not build_flags.strip()
+        or build_flags.strip() == "not_provided"
+    ):
+        raise ValueError(
+            f"{environment_path}: build_flags must contain exact compiler flags"
+        )
+    return environment
+
+
+def _validate_manifest_publication_provenance(
+    manifest: dict[str, Any],
+    environment: dict[str, Any] | None,
+    location: str,
+) -> None:
+    if environment is None:
+        return
+    for field in ("build_commit", "build_flags"):
+        if (
+            manifest.get(field) != environment.get(field)
+            or type(manifest.get(field)) is not type(environment.get(field))
+        ):
+            raise ValueError(
+                f"{location}: manifest {field} does not match environment.json"
+            )
 
 
 def _matching_fields(manifest: dict[str, Any], summary: dict[str, Any]) -> None:
@@ -256,13 +363,16 @@ def _validate_manifest_controls(
             )
 
 
-def _expected_run_keys(matrix: dict[str, Any]) -> set[tuple[Any, ...]]:
+def _expected_run_sequence(
+    matrix: dict[str, Any],
+) -> list[tuple[tuple[Any, ...], int | None]]:
     schema = matrix.get("schema")
     repetitions = _plain_integer(
         matrix.get("repetitions"), "matrix repetitions", 1
     )
     trials = range(1, repetitions + 1)
-    expected: set[tuple[Any, ...]] = set()
+    expected: list[tuple[tuple[Any, ...], int | None]] = []
+    run_index = 0
     if schema == "detlog-bench-matrix/v1":
         for mode, scenario_field in (
             ("sim", "sim_scenarios"),
@@ -273,15 +383,19 @@ def _expected_run_keys(matrix: dict[str, Any]) -> set[tuple[Any, ...]]:
                     for payload in _values(matrix, "payload_bytes"):
                         for scenario in _values(matrix, scenario_field):
                             for trial in trials:
-                                expected.add(
+                                run_index += 1
+                                expected.append(
                                     (
-                                        "cluster",
-                                        mode,
-                                        scenario,
-                                        nodes,
-                                        clients,
-                                        payload,
-                                        trial,
+                                        (
+                                            "cluster",
+                                            mode,
+                                            scenario,
+                                            nodes,
+                                            clients,
+                                            payload,
+                                            trial,
+                                        ),
+                                        1_000_000 * trial + run_index,
                                     )
                                 )
     elif schema == "detlog-runtime-fsync-matrix/v1":
@@ -295,31 +409,48 @@ def _expected_run_keys(matrix: dict[str, Any]) -> set[tuple[Any, ...]]:
                     for scenario in _values(matrix, "scenarios"):
                         for policy, group in variants:
                             for trial in trials:
-                                expected.add(
+                                run_index += 1
+                                expected.append(
                                     (
-                                        "runtime",
-                                        "tcp",
-                                        scenario,
-                                        nodes,
-                                        clients,
-                                        payload,
-                                        policy,
-                                        group,
-                                        trial,
+                                        (
+                                            "runtime",
+                                            "tcp",
+                                            scenario,
+                                            nodes,
+                                            clients,
+                                            payload,
+                                            policy,
+                                            group,
+                                            trial,
+                                        ),
+                                        2_000_000 * trial + run_index,
                                     )
                                 )
     elif schema == "detlog-wal-bench-matrix/v1":
         groups = _values(matrix, "group_sizes")
-        variants = [("flush-every", 1), ("unsafe-no-flush", 1)] + [
-            ("group", group) for group in groups
-        ]
         for entries in _values(matrix, "entry_sizes"):
             for payload in _values(matrix, "payload_bytes"):
-                for policy, group in variants:
-                    for trial in trials:
-                        expected.add(
-                            ("wal", entries, payload, policy, group, trial)
+                for trial in trials:
+                    expected.append(
+                        (("wal", entries, payload, "flush-every", 1, trial), None)
+                    )
+                    for group in groups:
+                        expected.append(
+                            (("wal", entries, payload, "group", group, trial), None)
                         )
+                    expected.append(
+                        (
+                            (
+                                "wal",
+                                entries,
+                                payload,
+                                "unsafe-no-flush",
+                                1,
+                                trial,
+                            ),
+                            None,
+                        )
+                    )
     else:
         raise ValueError(f"unsupported matrix schema: {schema!r}")
     return expected
@@ -374,6 +505,9 @@ def validate_directory(directory: Path) -> dict[str, int]:
         )
     matrix = _load_json(matrix_paths[0])
     _validate_matrix_controls(matrix)
+    publication_environment = _validate_publication_provenance(
+        directory, matrix
+    )
     expected_runs = _plain_integer(
         matrix.get("expected_runs"),
         f"{matrix_paths[0]}: expected_runs",
@@ -393,11 +527,16 @@ def validate_directory(directory: Path) -> dict[str, int]:
         raise ValueError(
             f"{matrix_paths[0]}: WAL matrix must not declare operations_per_run"
         )
-    expected_keys = _expected_run_keys(matrix)
-    if len(expected_keys) != expected_runs:
+    expected_sequence = _expected_run_sequence(matrix)
+    expected_keys = {key for key, _ in expected_sequence}
+    if (
+        len(expected_sequence) != expected_runs
+        or len(expected_keys) != expected_runs
+    ):
         raise ValueError(
-            f"{matrix_paths[0]}: Cartesian matrix has {len(expected_keys)} "
-            f"unique runs, expected_runs says {expected_runs}"
+            f"{matrix_paths[0]}: ordered Cartesian matrix has "
+            f"{len(expected_sequence)} runs and {len(expected_keys)} unique "
+            f"keys, expected_runs says {expected_runs}"
         )
 
     raw_candidates = sorted(directory.glob("raw*.jsonl"))
@@ -438,13 +577,24 @@ def validate_directory(directory: Path) -> dict[str, int]:
     observed_keys: set[tuple[Any, ...]] = set()
 
     source_context = (
-        gzip.open(raw, "rt", encoding="utf-8-sig")
+        gzip.open(raw, "rb")
         if raw.suffix == ".gz"
-        else raw.open("r", encoding="utf-8-sig")
+        else raw.open("rb")
     )
     with source_context as source:
         for line_number, raw_line in enumerate(source, 1):
-            line = raw_line.strip()
+            if not raw_line.endswith(b"\n"):
+                raise ValueError(
+                    f"{raw}:{line_number}: JSONL record is not LF-terminated"
+                )
+            try:
+                line = raw_line.decode(
+                    "utf-8-sig" if line_number == 1 else "utf-8"
+                ).strip()
+            except UnicodeDecodeError as error:
+                raise ValueError(
+                    f"{raw}:{line_number}: invalid UTF-8: {error}"
+                ) from error
             if not line:
                 raise ValueError(f"{raw}:{line_number}: blank records are invalid")
             try:
@@ -479,10 +629,29 @@ def validate_directory(directory: Path) -> dict[str, int]:
                 _validate_manifest_controls(
                     matrix, record, f"{raw}:{line_number}"
                 )
+                _validate_manifest_publication_provenance(
+                    record,
+                    publication_environment,
+                    f"{raw}:{line_number}",
+                )
                 key = _run_key(matrix, record)
-                if key not in expected_keys:
+                if run_count >= len(expected_sequence):
                     raise ValueError(
-                        f"{raw}:{line_number}: run is outside requested matrix: {key!r}"
+                        f"{raw}:{line_number}: run exceeds requested matrix"
+                    )
+                expected_key, expected_seed = expected_sequence[run_count]
+                if key != expected_key:
+                    raise ValueError(
+                        f"{raw}:{line_number}: run {run_count + 1} is out of "
+                        f"order: {key!r} != {expected_key!r}"
+                    )
+                if expected_seed is not None and (
+                    record.get("seed") != expected_seed
+                    or type(record.get("seed")) is not int
+                ):
+                    raise ValueError(
+                        f"{raw}:{line_number}: run {run_count + 1} seed "
+                        f"{record.get('seed')!r} != {expected_seed}"
                     )
                 if key in observed_keys:
                     raise ValueError(
