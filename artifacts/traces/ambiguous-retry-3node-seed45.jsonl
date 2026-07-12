@@ -1,0 +1,350 @@
+{"time":0,"sequence":1,"source":"simulator","kind":"node_registered","node":1,"peer":0,"term":0,"index":0,"token":0,"bytes":0,"detail":""}
+{"time":0,"sequence":2,"source":"simulator","kind":"storage_initialized","node":1,"peer":0,"term":0,"index":0,"token":0,"bytes":48,"detail":"durable_header"}
+{"time":0,"sequence":3,"source":"simulator","kind":"node_registered","node":2,"peer":0,"term":0,"index":0,"token":0,"bytes":0,"detail":""}
+{"time":0,"sequence":4,"source":"simulator","kind":"storage_initialized","node":2,"peer":0,"term":0,"index":0,"token":0,"bytes":48,"detail":"durable_header"}
+{"time":0,"sequence":5,"source":"simulator","kind":"node_registered","node":3,"peer":0,"term":0,"index":0,"token":0,"bytes":0,"detail":""}
+{"time":0,"sequence":6,"source":"simulator","kind":"storage_initialized","node":3,"peer":0,"term":0,"index":0,"token":0,"bytes":48,"detail":"durable_header"}
+{"time":0,"sequence":7,"source":"simulator","kind":"timer_armed","node":1,"peer":0,"term":0,"index":0,"token":1,"bytes":0,"detail":"election"}
+{"time":0,"sequence":8,"source":"adapter","kind":"timer_mapped","node":1,"peer":0,"term":0,"index":0,"token":1,"bytes":0,"detail":"election"}
+{"time":0,"sequence":9,"source":"simulator","kind":"timer_armed","node":2,"peer":0,"term":0,"index":0,"token":1,"bytes":0,"detail":"election"}
+{"time":0,"sequence":10,"source":"adapter","kind":"timer_mapped","node":2,"peer":0,"term":0,"index":0,"token":1,"bytes":0,"detail":"election"}
+{"time":0,"sequence":11,"source":"simulator","kind":"timer_armed","node":3,"peer":0,"term":0,"index":0,"token":1,"bytes":0,"detail":"election"}
+{"time":0,"sequence":12,"source":"adapter","kind":"timer_mapped","node":3,"peer":0,"term":0,"index":0,"token":1,"bytes":0,"detail":"election"}
+{"time":13,"sequence":13,"source":"simulator","kind":"timer_fired","node":3,"peer":0,"term":0,"index":0,"token":1,"bytes":0,"detail":"election"}
+{"time":13,"sequence":14,"source":"adapter","kind":"timer_deliver","node":3,"peer":0,"term":0,"index":0,"token":1,"bytes":0,"detail":""}
+{"time":13,"sequence":15,"source":"raft","kind":"term_change","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"started election"}
+{"time":13,"sequence":16,"source":"raft","kind":"role_change","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"became candidate"}
+{"time":13,"sequence":17,"source":"raft","kind":"vote","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"recorded self vote"}
+{"time":13,"sequence":18,"source":"raft","kind":"storage_begin","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation started"}
+{"time":13,"sequence":19,"source":"simulator","kind":"storage_queued","node":3,"peer":0,"term":0,"index":0,"token":1,"bytes":93,"detail":"write"}
+{"time":13,"sequence":20,"source":"adapter","kind":"persist_write_queued","node":3,"peer":0,"term":1,"index":0,"token":1,"bytes":93,"detail":""}
+{"time":14,"sequence":21,"source":"simulator","kind":"storage_completed","node":3,"peer":0,"term":0,"index":0,"token":1,"bytes":93,"detail":"success"}
+{"time":14,"sequence":22,"source":"simulator","kind":"storage_queued","node":3,"peer":0,"term":0,"index":0,"token":2,"bytes":0,"detail":"flush"}
+{"time":14,"sequence":23,"source":"adapter","kind":"persist_flush_queued","node":3,"peer":0,"term":1,"index":0,"token":1,"bytes":93,"detail":""}
+{"time":15,"sequence":24,"source":"simulator","kind":"timer_fired","node":2,"peer":0,"term":0,"index":0,"token":1,"bytes":0,"detail":"election"}
+{"time":15,"sequence":25,"source":"adapter","kind":"timer_deliver","node":2,"peer":0,"term":0,"index":0,"token":1,"bytes":0,"detail":""}
+{"time":15,"sequence":26,"source":"raft","kind":"term_change","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"started election"}
+{"time":15,"sequence":27,"source":"raft","kind":"role_change","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"became candidate"}
+{"time":15,"sequence":28,"source":"raft","kind":"vote","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"recorded self vote"}
+{"time":15,"sequence":29,"source":"raft","kind":"storage_begin","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation started"}
+{"time":15,"sequence":30,"source":"simulator","kind":"storage_queued","node":2,"peer":0,"term":0,"index":0,"token":3,"bytes":93,"detail":"write"}
+{"time":15,"sequence":31,"source":"adapter","kind":"persist_write_queued","node":2,"peer":0,"term":1,"index":0,"token":1,"bytes":93,"detail":""}
+{"time":15,"sequence":32,"source":"simulator","kind":"storage_completed","node":3,"peer":0,"term":0,"index":0,"token":2,"bytes":93,"detail":"success"}
+{"time":15,"sequence":33,"source":"adapter","kind":"persist_durable","node":3,"peer":0,"term":1,"index":0,"token":1,"bytes":93,"detail":""}
+{"time":15,"sequence":34,"source":"raft","kind":"storage_complete","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation completed"}
+{"time":15,"sequence":35,"source":"simulator","kind":"timer_armed","node":3,"peer":0,"term":0,"index":0,"token":2,"bytes":0,"detail":"election"}
+{"time":15,"sequence":36,"source":"adapter","kind":"timer_mapped","node":3,"peer":0,"term":1,"index":0,"token":2,"bytes":0,"detail":"election"}
+{"time":15,"sequence":37,"source":"raft","kind":"send","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":15,"sequence":38,"source":"simulator","kind":"network_queued","node":3,"peer":1,"term":0,"index":0,"token":1,"bytes":40,"detail":"single"}
+{"time":15,"sequence":39,"source":"adapter","kind":"transport_send","node":3,"peer":1,"term":1,"index":0,"token":0,"bytes":40,"detail":"queued"}
+{"time":15,"sequence":40,"source":"raft","kind":"send","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":15,"sequence":41,"source":"simulator","kind":"network_queued","node":3,"peer":2,"term":0,"index":0,"token":2,"bytes":40,"detail":"single"}
+{"time":15,"sequence":42,"source":"adapter","kind":"transport_send","node":3,"peer":2,"term":1,"index":0,"token":0,"bytes":40,"detail":"queued"}
+{"time":16,"sequence":43,"source":"simulator","kind":"storage_completed","node":2,"peer":0,"term":0,"index":0,"token":3,"bytes":93,"detail":"success"}
+{"time":16,"sequence":44,"source":"simulator","kind":"storage_queued","node":2,"peer":0,"term":0,"index":0,"token":4,"bytes":0,"detail":"flush"}
+{"time":16,"sequence":45,"source":"adapter","kind":"persist_flush_queued","node":2,"peer":0,"term":1,"index":0,"token":1,"bytes":93,"detail":""}
+{"time":16,"sequence":46,"source":"simulator","kind":"network_delivered","node":3,"peer":1,"term":0,"index":0,"token":1,"bytes":40,"detail":"original"}
+{"time":16,"sequence":47,"source":"adapter","kind":"protocol_deliver","node":1,"peer":3,"term":0,"index":0,"token":1,"bytes":40,"detail":""}
+{"time":16,"sequence":48,"source":"raft","kind":"receive","node":1,"peer":0,"term":0,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":16,"sequence":49,"source":"raft","kind":"term_change","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"observed a higher term"}
+{"time":16,"sequence":50,"source":"raft","kind":"storage_begin","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation started"}
+{"time":16,"sequence":51,"source":"simulator","kind":"storage_queued","node":1,"peer":0,"term":0,"index":0,"token":5,"bytes":93,"detail":"write"}
+{"time":16,"sequence":52,"source":"adapter","kind":"persist_write_queued","node":1,"peer":0,"term":1,"index":0,"token":1,"bytes":93,"detail":""}
+{"time":16,"sequence":53,"source":"simulator","kind":"network_delivered","node":3,"peer":2,"term":0,"index":0,"token":2,"bytes":40,"detail":"original"}
+{"time":16,"sequence":54,"source":"adapter","kind":"protocol_deliver","node":2,"peer":3,"term":1,"index":0,"token":2,"bytes":40,"detail":""}
+{"time":17,"sequence":55,"source":"simulator","kind":"storage_completed","node":2,"peer":0,"term":0,"index":0,"token":4,"bytes":93,"detail":"success"}
+{"time":17,"sequence":56,"source":"adapter","kind":"persist_durable","node":2,"peer":0,"term":1,"index":0,"token":1,"bytes":93,"detail":""}
+{"time":17,"sequence":57,"source":"raft","kind":"storage_complete","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation completed"}
+{"time":17,"sequence":58,"source":"simulator","kind":"timer_armed","node":2,"peer":0,"term":0,"index":0,"token":2,"bytes":0,"detail":"election"}
+{"time":17,"sequence":59,"source":"adapter","kind":"timer_mapped","node":2,"peer":0,"term":1,"index":0,"token":2,"bytes":0,"detail":"election"}
+{"time":17,"sequence":60,"source":"raft","kind":"send","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":17,"sequence":61,"source":"simulator","kind":"network_queued","node":2,"peer":1,"term":0,"index":0,"token":3,"bytes":40,"detail":"single"}
+{"time":17,"sequence":62,"source":"adapter","kind":"transport_send","node":2,"peer":1,"term":1,"index":0,"token":0,"bytes":40,"detail":"queued"}
+{"time":17,"sequence":63,"source":"raft","kind":"send","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":17,"sequence":64,"source":"simulator","kind":"network_queued","node":2,"peer":3,"term":0,"index":0,"token":4,"bytes":40,"detail":"single"}
+{"time":17,"sequence":65,"source":"adapter","kind":"transport_send","node":2,"peer":3,"term":1,"index":0,"token":0,"bytes":40,"detail":"queued"}
+{"time":17,"sequence":66,"source":"raft","kind":"receive","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":17,"sequence":67,"source":"raft","kind":"send","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":17,"sequence":68,"source":"simulator","kind":"network_queued","node":2,"peer":3,"term":0,"index":0,"token":5,"bytes":21,"detail":"single"}
+{"time":17,"sequence":69,"source":"adapter","kind":"transport_send","node":2,"peer":3,"term":1,"index":0,"token":0,"bytes":21,"detail":"queued"}
+{"time":17,"sequence":70,"source":"simulator","kind":"storage_completed","node":1,"peer":0,"term":0,"index":0,"token":5,"bytes":93,"detail":"success"}
+{"time":17,"sequence":71,"source":"simulator","kind":"storage_queued","node":1,"peer":0,"term":0,"index":0,"token":6,"bytes":0,"detail":"flush"}
+{"time":17,"sequence":72,"source":"adapter","kind":"persist_flush_queued","node":1,"peer":0,"term":1,"index":0,"token":1,"bytes":93,"detail":""}
+{"time":18,"sequence":73,"source":"simulator","kind":"timer_fired","node":1,"peer":0,"term":0,"index":0,"token":1,"bytes":0,"detail":"election"}
+{"time":18,"sequence":74,"source":"adapter","kind":"timer_deliver","node":1,"peer":0,"term":1,"index":0,"token":1,"bytes":0,"detail":""}
+{"time":18,"sequence":75,"source":"simulator","kind":"network_delivered","node":2,"peer":1,"term":0,"index":0,"token":3,"bytes":40,"detail":"original"}
+{"time":18,"sequence":76,"source":"adapter","kind":"protocol_deliver","node":1,"peer":2,"term":1,"index":0,"token":3,"bytes":40,"detail":""}
+{"time":18,"sequence":77,"source":"simulator","kind":"network_delivered","node":2,"peer":3,"term":0,"index":0,"token":4,"bytes":40,"detail":"original"}
+{"time":18,"sequence":78,"source":"adapter","kind":"protocol_deliver","node":3,"peer":2,"term":1,"index":0,"token":4,"bytes":40,"detail":""}
+{"time":18,"sequence":79,"source":"raft","kind":"receive","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":18,"sequence":80,"source":"raft","kind":"send","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":18,"sequence":81,"source":"simulator","kind":"network_queued","node":3,"peer":2,"term":0,"index":0,"token":6,"bytes":21,"detail":"single"}
+{"time":18,"sequence":82,"source":"adapter","kind":"transport_send","node":3,"peer":2,"term":1,"index":0,"token":0,"bytes":21,"detail":"queued"}
+{"time":18,"sequence":83,"source":"simulator","kind":"network_delivered","node":2,"peer":3,"term":0,"index":0,"token":5,"bytes":21,"detail":"original"}
+{"time":18,"sequence":84,"source":"adapter","kind":"protocol_deliver","node":3,"peer":2,"term":1,"index":0,"token":5,"bytes":21,"detail":""}
+{"time":18,"sequence":85,"source":"raft","kind":"receive","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":18,"sequence":86,"source":"simulator","kind":"storage_completed","node":1,"peer":0,"term":0,"index":0,"token":6,"bytes":93,"detail":"success"}
+{"time":18,"sequence":87,"source":"adapter","kind":"persist_durable","node":1,"peer":0,"term":1,"index":0,"token":1,"bytes":93,"detail":""}
+{"time":18,"sequence":88,"source":"raft","kind":"storage_complete","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation completed"}
+{"time":18,"sequence":89,"source":"raft","kind":"vote","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"granted vote"}
+{"time":18,"sequence":90,"source":"simulator","kind":"timer_armed","node":1,"peer":0,"term":0,"index":0,"token":2,"bytes":0,"detail":"election"}
+{"time":18,"sequence":91,"source":"adapter","kind":"timer_mapped","node":1,"peer":0,"term":1,"index":0,"token":2,"bytes":0,"detail":"election"}
+{"time":18,"sequence":92,"source":"raft","kind":"send","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":18,"sequence":93,"source":"simulator","kind":"network_queued","node":1,"peer":3,"term":0,"index":0,"token":7,"bytes":21,"detail":"single"}
+{"time":18,"sequence":94,"source":"adapter","kind":"transport_send","node":1,"peer":3,"term":1,"index":0,"token":0,"bytes":21,"detail":"queued"}
+{"time":18,"sequence":95,"source":"raft","kind":"receive","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":18,"sequence":96,"source":"raft","kind":"send","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":18,"sequence":97,"source":"simulator","kind":"network_queued","node":1,"peer":2,"term":0,"index":0,"token":8,"bytes":21,"detail":"single"}
+{"time":18,"sequence":98,"source":"adapter","kind":"transport_send","node":1,"peer":2,"term":1,"index":0,"token":0,"bytes":21,"detail":"queued"}
+{"time":19,"sequence":99,"source":"simulator","kind":"network_delivered","node":3,"peer":2,"term":0,"index":0,"token":6,"bytes":21,"detail":"original"}
+{"time":19,"sequence":100,"source":"adapter","kind":"protocol_deliver","node":2,"peer":3,"term":1,"index":0,"token":6,"bytes":21,"detail":""}
+{"time":19,"sequence":101,"source":"raft","kind":"receive","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":19,"sequence":102,"source":"simulator","kind":"network_delivered","node":1,"peer":3,"term":0,"index":0,"token":7,"bytes":21,"detail":"original"}
+{"time":19,"sequence":103,"source":"adapter","kind":"protocol_deliver","node":3,"peer":1,"term":1,"index":0,"token":7,"bytes":21,"detail":""}
+{"time":19,"sequence":104,"source":"raft","kind":"receive","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":19,"sequence":105,"source":"raft","kind":"vote","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"received vote"}
+{"time":19,"sequence":106,"source":"raft","kind":"role_change","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"became leader"}
+{"time":19,"sequence":107,"source":"raft","kind":"log_change","node":3,"peer":0,"term":1,"index":1,"token":0,"bytes":0,"detail":"appended leader readiness no-op"}
+{"time":19,"sequence":108,"source":"raft","kind":"storage_begin","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation started"}
+{"time":19,"sequence":109,"source":"simulator","kind":"storage_queued","node":3,"peer":0,"term":0,"index":0,"token":7,"bytes":97,"detail":"write"}
+{"time":19,"sequence":110,"source":"adapter","kind":"persist_write_queued","node":3,"peer":0,"term":1,"index":0,"token":2,"bytes":97,"detail":""}
+{"time":19,"sequence":111,"source":"simulator","kind":"network_delivered","node":1,"peer":2,"term":0,"index":0,"token":8,"bytes":21,"detail":"original"}
+{"time":19,"sequence":112,"source":"adapter","kind":"protocol_deliver","node":2,"peer":1,"term":1,"index":0,"token":8,"bytes":21,"detail":""}
+{"time":19,"sequence":113,"source":"raft","kind":"receive","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":20,"sequence":114,"source":"simulator","kind":"storage_completed","node":3,"peer":0,"term":0,"index":0,"token":7,"bytes":97,"detail":"success"}
+{"time":20,"sequence":115,"source":"simulator","kind":"storage_queued","node":3,"peer":0,"term":0,"index":0,"token":8,"bytes":0,"detail":"flush"}
+{"time":20,"sequence":116,"source":"adapter","kind":"persist_flush_queued","node":3,"peer":0,"term":1,"index":0,"token":2,"bytes":97,"detail":""}
+{"time":21,"sequence":117,"source":"simulator","kind":"storage_completed","node":3,"peer":0,"term":0,"index":0,"token":8,"bytes":97,"detail":"success"}
+{"time":21,"sequence":118,"source":"adapter","kind":"persist_durable","node":3,"peer":0,"term":1,"index":0,"token":2,"bytes":97,"detail":""}
+{"time":21,"sequence":119,"source":"raft","kind":"storage_complete","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation completed"}
+{"time":21,"sequence":120,"source":"raft","kind":"send","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":21,"sequence":121,"source":"simulator","kind":"network_queued","node":3,"peer":1,"term":0,"index":0,"token":9,"bytes":77,"detail":"single"}
+{"time":21,"sequence":122,"source":"adapter","kind":"transport_send","node":3,"peer":1,"term":1,"index":0,"token":0,"bytes":77,"detail":"queued"}
+{"time":21,"sequence":123,"source":"raft","kind":"send","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":21,"sequence":124,"source":"simulator","kind":"network_queued","node":3,"peer":2,"term":0,"index":0,"token":10,"bytes":77,"detail":"single"}
+{"time":21,"sequence":125,"source":"adapter","kind":"transport_send","node":3,"peer":2,"term":1,"index":0,"token":0,"bytes":77,"detail":"queued"}
+{"time":21,"sequence":126,"source":"simulator","kind":"timer_armed","node":3,"peer":0,"term":0,"index":0,"token":1,"bytes":0,"detail":"heartbeat"}
+{"time":21,"sequence":127,"source":"adapter","kind":"timer_mapped","node":3,"peer":0,"term":1,"index":0,"token":2,"bytes":0,"detail":"heartbeat"}
+{"time":22,"sequence":128,"source":"simulator","kind":"network_delivered","node":3,"peer":1,"term":0,"index":0,"token":9,"bytes":77,"detail":"original"}
+{"time":22,"sequence":129,"source":"adapter","kind":"protocol_deliver","node":1,"peer":3,"term":1,"index":0,"token":9,"bytes":77,"detail":""}
+{"time":22,"sequence":130,"source":"raft","kind":"receive","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":22,"sequence":131,"source":"raft","kind":"log_change","node":1,"peer":0,"term":1,"index":1,"token":0,"bytes":0,"detail":"accepted replicated log suffix"}
+{"time":22,"sequence":132,"source":"raft","kind":"storage_begin","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation started"}
+{"time":22,"sequence":133,"source":"simulator","kind":"storage_queued","node":1,"peer":0,"term":0,"index":0,"token":9,"bytes":97,"detail":"write"}
+{"time":22,"sequence":134,"source":"adapter","kind":"persist_write_queued","node":1,"peer":0,"term":1,"index":0,"token":2,"bytes":97,"detail":""}
+{"time":22,"sequence":135,"source":"simulator","kind":"network_delivered","node":3,"peer":2,"term":0,"index":0,"token":10,"bytes":77,"detail":"original"}
+{"time":22,"sequence":136,"source":"adapter","kind":"protocol_deliver","node":2,"peer":3,"term":1,"index":0,"token":10,"bytes":77,"detail":""}
+{"time":22,"sequence":137,"source":"raft","kind":"receive","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":22,"sequence":138,"source":"raft","kind":"role_change","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"became follower"}
+{"time":22,"sequence":139,"source":"raft","kind":"log_change","node":2,"peer":0,"term":1,"index":1,"token":0,"bytes":0,"detail":"accepted replicated log suffix"}
+{"time":22,"sequence":140,"source":"raft","kind":"storage_begin","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation started"}
+{"time":22,"sequence":141,"source":"simulator","kind":"storage_queued","node":2,"peer":0,"term":0,"index":0,"token":10,"bytes":97,"detail":"write"}
+{"time":22,"sequence":142,"source":"adapter","kind":"persist_write_queued","node":2,"peer":0,"term":1,"index":0,"token":2,"bytes":97,"detail":""}
+{"time":23,"sequence":143,"source":"simulator","kind":"timer_fired","node":3,"peer":0,"term":0,"index":0,"token":1,"bytes":0,"detail":"heartbeat"}
+{"time":23,"sequence":144,"source":"adapter","kind":"timer_deliver","node":3,"peer":0,"term":1,"index":0,"token":2,"bytes":0,"detail":""}
+{"time":23,"sequence":145,"source":"simulator","kind":"timer_armed","node":3,"peer":0,"term":0,"index":0,"token":2,"bytes":0,"detail":"heartbeat"}
+{"time":23,"sequence":146,"source":"adapter","kind":"timer_mapped","node":3,"peer":0,"term":1,"index":0,"token":3,"bytes":0,"detail":"heartbeat"}
+{"time":23,"sequence":147,"source":"simulator","kind":"storage_completed","node":1,"peer":0,"term":0,"index":0,"token":9,"bytes":97,"detail":"success"}
+{"time":23,"sequence":148,"source":"simulator","kind":"storage_queued","node":1,"peer":0,"term":0,"index":0,"token":11,"bytes":0,"detail":"flush"}
+{"time":23,"sequence":149,"source":"adapter","kind":"persist_flush_queued","node":1,"peer":0,"term":1,"index":0,"token":2,"bytes":97,"detail":""}
+{"time":23,"sequence":150,"source":"simulator","kind":"storage_completed","node":2,"peer":0,"term":0,"index":0,"token":10,"bytes":97,"detail":"success"}
+{"time":23,"sequence":151,"source":"simulator","kind":"storage_queued","node":2,"peer":0,"term":0,"index":0,"token":12,"bytes":0,"detail":"flush"}
+{"time":23,"sequence":152,"source":"adapter","kind":"persist_flush_queued","node":2,"peer":0,"term":1,"index":0,"token":2,"bytes":97,"detail":""}
+{"time":24,"sequence":153,"source":"simulator","kind":"storage_completed","node":1,"peer":0,"term":0,"index":0,"token":11,"bytes":97,"detail":"success"}
+{"time":24,"sequence":154,"source":"adapter","kind":"persist_durable","node":1,"peer":0,"term":1,"index":0,"token":2,"bytes":97,"detail":""}
+{"time":24,"sequence":155,"source":"raft","kind":"storage_complete","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation completed"}
+{"time":24,"sequence":156,"source":"simulator","kind":"timer_armed","node":1,"peer":0,"term":0,"index":0,"token":3,"bytes":0,"detail":"election"}
+{"time":24,"sequence":157,"source":"adapter","kind":"timer_mapped","node":1,"peer":0,"term":1,"index":0,"token":3,"bytes":0,"detail":"election"}
+{"time":24,"sequence":158,"source":"raft","kind":"send","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":24,"sequence":159,"source":"simulator","kind":"network_queued","node":1,"peer":3,"term":0,"index":0,"token":11,"bytes":53,"detail":"single"}
+{"time":24,"sequence":160,"source":"adapter","kind":"transport_send","node":1,"peer":3,"term":1,"index":0,"token":0,"bytes":53,"detail":"queued"}
+{"time":24,"sequence":161,"source":"simulator","kind":"storage_completed","node":2,"peer":0,"term":0,"index":0,"token":12,"bytes":97,"detail":"success"}
+{"time":24,"sequence":162,"source":"adapter","kind":"persist_durable","node":2,"peer":0,"term":1,"index":0,"token":2,"bytes":97,"detail":""}
+{"time":24,"sequence":163,"source":"raft","kind":"storage_complete","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation completed"}
+{"time":24,"sequence":164,"source":"simulator","kind":"timer_armed","node":2,"peer":0,"term":0,"index":0,"token":3,"bytes":0,"detail":"election"}
+{"time":24,"sequence":165,"source":"adapter","kind":"timer_mapped","node":2,"peer":0,"term":1,"index":0,"token":3,"bytes":0,"detail":"election"}
+{"time":24,"sequence":166,"source":"raft","kind":"send","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":24,"sequence":167,"source":"simulator","kind":"network_queued","node":2,"peer":3,"term":0,"index":0,"token":12,"bytes":53,"detail":"single"}
+{"time":24,"sequence":168,"source":"adapter","kind":"transport_send","node":2,"peer":3,"term":1,"index":0,"token":0,"bytes":53,"detail":"queued"}
+{"time":25,"sequence":169,"source":"simulator","kind":"timer_fired","node":3,"peer":0,"term":0,"index":0,"token":2,"bytes":0,"detail":"election"}
+{"time":25,"sequence":170,"source":"adapter","kind":"timer_deliver","node":3,"peer":0,"term":1,"index":0,"token":2,"bytes":0,"detail":""}
+{"time":25,"sequence":171,"source":"simulator","kind":"timer_fired","node":3,"peer":0,"term":0,"index":0,"token":2,"bytes":0,"detail":"heartbeat"}
+{"time":25,"sequence":172,"source":"adapter","kind":"timer_deliver","node":3,"peer":0,"term":1,"index":0,"token":3,"bytes":0,"detail":""}
+{"time":25,"sequence":173,"source":"simulator","kind":"timer_armed","node":3,"peer":0,"term":0,"index":0,"token":3,"bytes":0,"detail":"heartbeat"}
+{"time":25,"sequence":174,"source":"adapter","kind":"timer_mapped","node":3,"peer":0,"term":1,"index":0,"token":4,"bytes":0,"detail":"heartbeat"}
+{"time":25,"sequence":175,"source":"simulator","kind":"network_delivered","node":1,"peer":3,"term":0,"index":0,"token":11,"bytes":53,"detail":"original"}
+{"time":25,"sequence":176,"source":"adapter","kind":"protocol_deliver","node":3,"peer":1,"term":1,"index":0,"token":11,"bytes":53,"detail":""}
+{"time":25,"sequence":177,"source":"raft","kind":"receive","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":25,"sequence":178,"source":"raft","kind":"storage_begin","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation started"}
+{"time":25,"sequence":179,"source":"simulator","kind":"storage_queued","node":3,"peer":0,"term":0,"index":0,"token":13,"bytes":88,"detail":"write"}
+{"time":25,"sequence":180,"source":"adapter","kind":"persist_write_queued","node":3,"peer":0,"term":1,"index":0,"token":3,"bytes":88,"detail":""}
+{"time":25,"sequence":181,"source":"simulator","kind":"network_delivered","node":2,"peer":3,"term":0,"index":0,"token":12,"bytes":53,"detail":"original"}
+{"time":25,"sequence":182,"source":"adapter","kind":"protocol_deliver","node":3,"peer":2,"term":1,"index":0,"token":12,"bytes":53,"detail":""}
+{"time":26,"sequence":183,"source":"simulator","kind":"storage_completed","node":3,"peer":0,"term":0,"index":0,"token":13,"bytes":88,"detail":"success"}
+{"time":26,"sequence":184,"source":"simulator","kind":"storage_queued","node":3,"peer":0,"term":0,"index":0,"token":14,"bytes":0,"detail":"flush"}
+{"time":26,"sequence":185,"source":"adapter","kind":"persist_flush_queued","node":3,"peer":0,"term":1,"index":0,"token":3,"bytes":88,"detail":""}
+{"time":27,"sequence":186,"source":"simulator","kind":"timer_fired","node":3,"peer":0,"term":0,"index":0,"token":3,"bytes":0,"detail":"heartbeat"}
+{"time":27,"sequence":187,"source":"adapter","kind":"timer_deliver","node":3,"peer":0,"term":1,"index":0,"token":4,"bytes":0,"detail":""}
+{"time":27,"sequence":188,"source":"simulator","kind":"storage_completed","node":3,"peer":0,"term":0,"index":0,"token":14,"bytes":88,"detail":"success"}
+{"time":27,"sequence":189,"source":"adapter","kind":"persist_durable","node":3,"peer":0,"term":1,"index":1,"token":3,"bytes":88,"detail":""}
+{"time":27,"sequence":190,"source":"raft","kind":"storage_complete","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation completed"}
+{"time":27,"sequence":191,"source":"raft","kind":"commit","node":3,"peer":0,"term":1,"index":1,"token":0,"bytes":0,"detail":"leader durably advanced commit index"}
+{"time":27,"sequence":192,"source":"raft","kind":"apply","node":3,"peer":0,"term":1,"index":1,"token":0,"bytes":0,"detail":"applied no-op"}
+{"time":27,"sequence":193,"source":"raft","kind":"send","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":27,"sequence":194,"source":"simulator","kind":"network_queued","node":3,"peer":1,"term":0,"index":0,"token":13,"bytes":60,"detail":"single"}
+{"time":27,"sequence":195,"source":"adapter","kind":"transport_send","node":3,"peer":1,"term":1,"index":0,"token":0,"bytes":60,"detail":"queued"}
+{"time":27,"sequence":196,"source":"raft","kind":"receive","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":27,"sequence":197,"source":"raft","kind":"send","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":27,"sequence":198,"source":"simulator","kind":"network_queued","node":3,"peer":2,"term":0,"index":0,"token":14,"bytes":60,"detail":"single"}
+{"time":27,"sequence":199,"source":"adapter","kind":"transport_send","node":3,"peer":2,"term":1,"index":0,"token":0,"bytes":60,"detail":"queued"}
+{"time":27,"sequence":200,"source":"simulator","kind":"timer_armed","node":3,"peer":0,"term":0,"index":0,"token":4,"bytes":0,"detail":"heartbeat"}
+{"time":27,"sequence":201,"source":"adapter","kind":"timer_mapped","node":3,"peer":0,"term":1,"index":0,"token":5,"bytes":0,"detail":"heartbeat"}
+{"time":27,"sequence":202,"source":"adapter","kind":"client_submit","node":3,"peer":0,"term":1,"index":0,"token":1,"bytes":20,"detail":""}
+{"time":27,"sequence":203,"source":"raft","kind":"log_change","node":3,"peer":0,"term":1,"index":2,"token":0,"bytes":0,"detail":"appended client command"}
+{"time":27,"sequence":204,"source":"raft","kind":"storage_begin","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation started"}
+{"time":27,"sequence":205,"source":"simulator","kind":"storage_queued","node":3,"peer":0,"term":0,"index":0,"token":15,"bytes":150,"detail":"write"}
+{"time":27,"sequence":206,"source":"adapter","kind":"persist_write_queued","node":3,"peer":0,"term":1,"index":0,"token":4,"bytes":150,"detail":""}
+{"time":28,"sequence":207,"source":"simulator","kind":"network_delivered","node":3,"peer":1,"term":0,"index":0,"token":13,"bytes":60,"detail":"original"}
+{"time":28,"sequence":208,"source":"adapter","kind":"protocol_deliver","node":1,"peer":3,"term":1,"index":0,"token":13,"bytes":60,"detail":""}
+{"time":28,"sequence":209,"source":"raft","kind":"receive","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":28,"sequence":210,"source":"raft","kind":"storage_begin","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation started"}
+{"time":28,"sequence":211,"source":"simulator","kind":"storage_queued","node":1,"peer":0,"term":0,"index":0,"token":16,"bytes":88,"detail":"write"}
+{"time":28,"sequence":212,"source":"adapter","kind":"persist_write_queued","node":1,"peer":0,"term":1,"index":0,"token":3,"bytes":88,"detail":""}
+{"time":28,"sequence":213,"source":"simulator","kind":"network_delivered","node":3,"peer":2,"term":0,"index":0,"token":14,"bytes":60,"detail":"original"}
+{"time":28,"sequence":214,"source":"adapter","kind":"protocol_deliver","node":2,"peer":3,"term":1,"index":0,"token":14,"bytes":60,"detail":""}
+{"time":28,"sequence":215,"source":"raft","kind":"receive","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":28,"sequence":216,"source":"raft","kind":"storage_begin","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation started"}
+{"time":28,"sequence":217,"source":"simulator","kind":"storage_queued","node":2,"peer":0,"term":0,"index":0,"token":17,"bytes":88,"detail":"write"}
+{"time":28,"sequence":218,"source":"adapter","kind":"persist_write_queued","node":2,"peer":0,"term":1,"index":0,"token":3,"bytes":88,"detail":""}
+{"time":28,"sequence":219,"source":"simulator","kind":"storage_completed","node":3,"peer":0,"term":0,"index":0,"token":15,"bytes":150,"detail":"success"}
+{"time":28,"sequence":220,"source":"simulator","kind":"storage_queued","node":3,"peer":0,"term":0,"index":0,"token":18,"bytes":0,"detail":"flush"}
+{"time":28,"sequence":221,"source":"adapter","kind":"persist_flush_queued","node":3,"peer":0,"term":1,"index":0,"token":4,"bytes":150,"detail":""}
+{"time":29,"sequence":222,"source":"simulator","kind":"stale_event","node":1,"peer":0,"term":0,"index":0,"token":2,"bytes":0,"detail":"timer"}
+{"time":29,"sequence":223,"source":"simulator","kind":"timer_fired","node":3,"peer":0,"term":0,"index":0,"token":4,"bytes":0,"detail":"heartbeat"}
+{"time":29,"sequence":224,"source":"adapter","kind":"timer_deliver","node":3,"peer":0,"term":1,"index":0,"token":5,"bytes":0,"detail":""}
+{"time":29,"sequence":225,"source":"simulator","kind":"storage_completed","node":1,"peer":0,"term":0,"index":0,"token":16,"bytes":88,"detail":"success"}
+{"time":29,"sequence":226,"source":"simulator","kind":"storage_queued","node":1,"peer":0,"term":0,"index":0,"token":19,"bytes":0,"detail":"flush"}
+{"time":29,"sequence":227,"source":"adapter","kind":"persist_flush_queued","node":1,"peer":0,"term":1,"index":0,"token":3,"bytes":88,"detail":""}
+{"time":29,"sequence":228,"source":"simulator","kind":"storage_completed","node":2,"peer":0,"term":0,"index":0,"token":17,"bytes":88,"detail":"success"}
+{"time":29,"sequence":229,"source":"simulator","kind":"storage_queued","node":2,"peer":0,"term":0,"index":0,"token":20,"bytes":0,"detail":"flush"}
+{"time":29,"sequence":230,"source":"adapter","kind":"persist_flush_queued","node":2,"peer":0,"term":1,"index":0,"token":3,"bytes":88,"detail":""}
+{"time":29,"sequence":231,"source":"simulator","kind":"storage_completed","node":3,"peer":0,"term":0,"index":0,"token":18,"bytes":150,"detail":"success"}
+{"time":29,"sequence":232,"source":"adapter","kind":"persist_durable","node":3,"peer":0,"term":1,"index":1,"token":4,"bytes":150,"detail":""}
+{"time":29,"sequence":233,"source":"raft","kind":"storage_complete","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation completed"}
+{"time":29,"sequence":234,"source":"simulator","kind":"timer_armed","node":3,"peer":0,"term":0,"index":0,"token":5,"bytes":0,"detail":"heartbeat"}
+{"time":29,"sequence":235,"source":"adapter","kind":"timer_mapped","node":3,"peer":0,"term":1,"index":0,"token":6,"bytes":0,"detail":"heartbeat"}
+{"time":30,"sequence":236,"source":"simulator","kind":"storage_completed","node":1,"peer":0,"term":0,"index":0,"token":19,"bytes":88,"detail":"success"}
+{"time":30,"sequence":237,"source":"adapter","kind":"persist_durable","node":1,"peer":0,"term":1,"index":1,"token":3,"bytes":88,"detail":""}
+{"time":30,"sequence":238,"source":"raft","kind":"storage_complete","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation completed"}
+{"time":30,"sequence":239,"source":"raft","kind":"commit","node":1,"peer":0,"term":1,"index":1,"token":0,"bytes":0,"detail":"learned committed prefix from leader"}
+{"time":30,"sequence":240,"source":"raft","kind":"apply","node":1,"peer":0,"term":1,"index":1,"token":0,"bytes":0,"detail":"applied no-op"}
+{"time":30,"sequence":241,"source":"simulator","kind":"timer_armed","node":1,"peer":0,"term":0,"index":0,"token":4,"bytes":0,"detail":"election"}
+{"time":30,"sequence":242,"source":"adapter","kind":"timer_mapped","node":1,"peer":0,"term":1,"index":0,"token":4,"bytes":0,"detail":"election"}
+{"time":30,"sequence":243,"source":"raft","kind":"send","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":30,"sequence":244,"source":"simulator","kind":"network_queued","node":1,"peer":3,"term":0,"index":0,"token":15,"bytes":53,"detail":"single"}
+{"time":30,"sequence":245,"source":"adapter","kind":"transport_send","node":1,"peer":3,"term":1,"index":0,"token":0,"bytes":53,"detail":"queued"}
+{"time":30,"sequence":246,"source":"simulator","kind":"storage_completed","node":2,"peer":0,"term":0,"index":0,"token":20,"bytes":88,"detail":"success"}
+{"time":30,"sequence":247,"source":"adapter","kind":"persist_durable","node":2,"peer":0,"term":1,"index":1,"token":3,"bytes":88,"detail":""}
+{"time":30,"sequence":248,"source":"raft","kind":"storage_complete","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation completed"}
+{"time":30,"sequence":249,"source":"raft","kind":"commit","node":2,"peer":0,"term":1,"index":1,"token":0,"bytes":0,"detail":"learned committed prefix from leader"}
+{"time":30,"sequence":250,"source":"raft","kind":"apply","node":2,"peer":0,"term":1,"index":1,"token":0,"bytes":0,"detail":"applied no-op"}
+{"time":30,"sequence":251,"source":"simulator","kind":"timer_armed","node":2,"peer":0,"term":0,"index":0,"token":4,"bytes":0,"detail":"election"}
+{"time":30,"sequence":252,"source":"adapter","kind":"timer_mapped","node":2,"peer":0,"term":1,"index":0,"token":4,"bytes":0,"detail":"election"}
+{"time":30,"sequence":253,"source":"raft","kind":"send","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":30,"sequence":254,"source":"simulator","kind":"network_queued","node":2,"peer":3,"term":0,"index":0,"token":16,"bytes":53,"detail":"single"}
+{"time":30,"sequence":255,"source":"adapter","kind":"transport_send","node":2,"peer":3,"term":1,"index":0,"token":0,"bytes":53,"detail":"queued"}
+{"time":31,"sequence":256,"source":"simulator","kind":"timer_fired","node":3,"peer":0,"term":0,"index":0,"token":5,"bytes":0,"detail":"heartbeat"}
+{"time":31,"sequence":257,"source":"adapter","kind":"timer_deliver","node":3,"peer":0,"term":1,"index":0,"token":6,"bytes":0,"detail":""}
+{"time":31,"sequence":258,"source":"raft","kind":"send","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":31,"sequence":259,"source":"simulator","kind":"network_queued","node":3,"peer":1,"term":0,"index":0,"token":17,"bytes":130,"detail":"single"}
+{"time":31,"sequence":260,"source":"adapter","kind":"transport_send","node":3,"peer":1,"term":1,"index":0,"token":0,"bytes":130,"detail":"queued"}
+{"time":31,"sequence":261,"source":"simulator","kind":"timer_armed","node":3,"peer":0,"term":0,"index":0,"token":6,"bytes":0,"detail":"heartbeat"}
+{"time":31,"sequence":262,"source":"adapter","kind":"timer_mapped","node":3,"peer":0,"term":1,"index":0,"token":7,"bytes":0,"detail":"heartbeat"}
+{"time":31,"sequence":263,"source":"simulator","kind":"network_delivered","node":1,"peer":3,"term":0,"index":0,"token":15,"bytes":53,"detail":"original"}
+{"time":31,"sequence":264,"source":"adapter","kind":"protocol_deliver","node":3,"peer":1,"term":1,"index":0,"token":15,"bytes":53,"detail":""}
+{"time":31,"sequence":265,"source":"raft","kind":"receive","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":31,"sequence":266,"source":"simulator","kind":"network_delivered","node":2,"peer":3,"term":0,"index":0,"token":16,"bytes":53,"detail":"original"}
+{"time":31,"sequence":267,"source":"adapter","kind":"protocol_deliver","node":3,"peer":2,"term":1,"index":0,"token":16,"bytes":53,"detail":""}
+{"time":31,"sequence":268,"source":"raft","kind":"receive","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":31,"sequence":269,"source":"raft","kind":"send","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":31,"sequence":270,"source":"simulator","kind":"network_queued","node":3,"peer":2,"term":0,"index":0,"token":18,"bytes":130,"detail":"single"}
+{"time":31,"sequence":271,"source":"adapter","kind":"transport_send","node":3,"peer":2,"term":1,"index":0,"token":0,"bytes":130,"detail":"queued"}
+{"time":32,"sequence":272,"source":"simulator","kind":"network_delivered","node":3,"peer":1,"term":0,"index":0,"token":17,"bytes":130,"detail":"original"}
+{"time":32,"sequence":273,"source":"adapter","kind":"protocol_deliver","node":1,"peer":3,"term":1,"index":0,"token":17,"bytes":130,"detail":""}
+{"time":32,"sequence":274,"source":"raft","kind":"receive","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":32,"sequence":275,"source":"raft","kind":"log_change","node":1,"peer":0,"term":1,"index":2,"token":0,"bytes":0,"detail":"accepted replicated log suffix"}
+{"time":32,"sequence":276,"source":"raft","kind":"storage_begin","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation started"}
+{"time":32,"sequence":277,"source":"simulator","kind":"storage_queued","node":1,"peer":0,"term":0,"index":0,"token":21,"bytes":150,"detail":"write"}
+{"time":32,"sequence":278,"source":"adapter","kind":"persist_write_queued","node":1,"peer":0,"term":1,"index":0,"token":4,"bytes":150,"detail":""}
+{"time":32,"sequence":279,"source":"simulator","kind":"network_delivered","node":3,"peer":2,"term":0,"index":0,"token":18,"bytes":130,"detail":"original"}
+{"time":32,"sequence":280,"source":"adapter","kind":"protocol_deliver","node":2,"peer":3,"term":1,"index":0,"token":18,"bytes":130,"detail":""}
+{"time":32,"sequence":281,"source":"raft","kind":"receive","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":32,"sequence":282,"source":"raft","kind":"log_change","node":2,"peer":0,"term":1,"index":2,"token":0,"bytes":0,"detail":"accepted replicated log suffix"}
+{"time":32,"sequence":283,"source":"raft","kind":"storage_begin","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation started"}
+{"time":32,"sequence":284,"source":"simulator","kind":"storage_queued","node":2,"peer":0,"term":0,"index":0,"token":22,"bytes":150,"detail":"write"}
+{"time":32,"sequence":285,"source":"adapter","kind":"persist_write_queued","node":2,"peer":0,"term":1,"index":0,"token":4,"bytes":150,"detail":""}
+{"time":33,"sequence":286,"source":"simulator","kind":"stale_event","node":2,"peer":0,"term":0,"index":0,"token":2,"bytes":0,"detail":"timer"}
+{"time":33,"sequence":287,"source":"simulator","kind":"timer_fired","node":3,"peer":0,"term":0,"index":0,"token":6,"bytes":0,"detail":"heartbeat"}
+{"time":33,"sequence":288,"source":"adapter","kind":"timer_deliver","node":3,"peer":0,"term":1,"index":0,"token":7,"bytes":0,"detail":""}
+{"time":33,"sequence":289,"source":"simulator","kind":"timer_armed","node":3,"peer":0,"term":0,"index":0,"token":7,"bytes":0,"detail":"heartbeat"}
+{"time":33,"sequence":290,"source":"adapter","kind":"timer_mapped","node":3,"peer":0,"term":1,"index":0,"token":8,"bytes":0,"detail":"heartbeat"}
+{"time":33,"sequence":291,"source":"simulator","kind":"storage_completed","node":1,"peer":0,"term":0,"index":0,"token":21,"bytes":150,"detail":"success"}
+{"time":33,"sequence":292,"source":"simulator","kind":"storage_queued","node":1,"peer":0,"term":0,"index":0,"token":23,"bytes":0,"detail":"flush"}
+{"time":33,"sequence":293,"source":"adapter","kind":"persist_flush_queued","node":1,"peer":0,"term":1,"index":0,"token":4,"bytes":150,"detail":""}
+{"time":33,"sequence":294,"source":"simulator","kind":"storage_completed","node":2,"peer":0,"term":0,"index":0,"token":22,"bytes":150,"detail":"success"}
+{"time":33,"sequence":295,"source":"simulator","kind":"storage_queued","node":2,"peer":0,"term":0,"index":0,"token":24,"bytes":0,"detail":"flush"}
+{"time":33,"sequence":296,"source":"adapter","kind":"persist_flush_queued","node":2,"peer":0,"term":1,"index":0,"token":4,"bytes":150,"detail":""}
+{"time":34,"sequence":297,"source":"simulator","kind":"storage_completed","node":1,"peer":0,"term":0,"index":0,"token":23,"bytes":150,"detail":"success"}
+{"time":34,"sequence":298,"source":"adapter","kind":"persist_durable","node":1,"peer":0,"term":1,"index":1,"token":4,"bytes":150,"detail":""}
+{"time":34,"sequence":299,"source":"raft","kind":"storage_complete","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation completed"}
+{"time":34,"sequence":300,"source":"simulator","kind":"timer_armed","node":1,"peer":0,"term":0,"index":0,"token":5,"bytes":0,"detail":"election"}
+{"time":34,"sequence":301,"source":"adapter","kind":"timer_mapped","node":1,"peer":0,"term":1,"index":0,"token":5,"bytes":0,"detail":"election"}
+{"time":34,"sequence":302,"source":"raft","kind":"send","node":1,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":34,"sequence":303,"source":"simulator","kind":"network_queued","node":1,"peer":3,"term":0,"index":0,"token":19,"bytes":53,"detail":"single"}
+{"time":34,"sequence":304,"source":"adapter","kind":"transport_send","node":1,"peer":3,"term":1,"index":0,"token":0,"bytes":53,"detail":"queued"}
+{"time":34,"sequence":305,"source":"simulator","kind":"storage_completed","node":2,"peer":0,"term":0,"index":0,"token":24,"bytes":150,"detail":"success"}
+{"time":34,"sequence":306,"source":"adapter","kind":"persist_durable","node":2,"peer":0,"term":1,"index":1,"token":4,"bytes":150,"detail":""}
+{"time":34,"sequence":307,"source":"raft","kind":"storage_complete","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation completed"}
+{"time":34,"sequence":308,"source":"simulator","kind":"timer_armed","node":2,"peer":0,"term":0,"index":0,"token":5,"bytes":0,"detail":"election"}
+{"time":34,"sequence":309,"source":"adapter","kind":"timer_mapped","node":2,"peer":0,"term":1,"index":0,"token":5,"bytes":0,"detail":"election"}
+{"time":34,"sequence":310,"source":"raft","kind":"send","node":2,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":34,"sequence":311,"source":"simulator","kind":"network_queued","node":2,"peer":3,"term":0,"index":0,"token":20,"bytes":53,"detail":"single"}
+{"time":34,"sequence":312,"source":"adapter","kind":"transport_send","node":2,"peer":3,"term":1,"index":0,"token":0,"bytes":53,"detail":"queued"}
+{"time":35,"sequence":313,"source":"simulator","kind":"stale_event","node":2,"peer":0,"term":0,"index":0,"token":3,"bytes":0,"detail":"timer"}
+{"time":35,"sequence":314,"source":"simulator","kind":"timer_fired","node":3,"peer":0,"term":0,"index":0,"token":7,"bytes":0,"detail":"heartbeat"}
+{"time":35,"sequence":315,"source":"adapter","kind":"timer_deliver","node":3,"peer":0,"term":1,"index":0,"token":8,"bytes":0,"detail":""}
+{"time":35,"sequence":316,"source":"simulator","kind":"timer_armed","node":3,"peer":0,"term":0,"index":0,"token":8,"bytes":0,"detail":"heartbeat"}
+{"time":35,"sequence":317,"source":"adapter","kind":"timer_mapped","node":3,"peer":0,"term":1,"index":0,"token":9,"bytes":0,"detail":"heartbeat"}
+{"time":35,"sequence":318,"source":"simulator","kind":"network_delivered","node":1,"peer":3,"term":0,"index":0,"token":19,"bytes":53,"detail":"original"}
+{"time":35,"sequence":319,"source":"adapter","kind":"protocol_deliver","node":3,"peer":1,"term":1,"index":0,"token":19,"bytes":53,"detail":""}
+{"time":35,"sequence":320,"source":"raft","kind":"receive","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":35,"sequence":321,"source":"raft","kind":"storage_begin","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation started"}
+{"time":35,"sequence":322,"source":"simulator","kind":"storage_queued","node":3,"peer":0,"term":0,"index":0,"token":25,"bytes":88,"detail":"write"}
+{"time":35,"sequence":323,"source":"adapter","kind":"persist_write_queued","node":3,"peer":0,"term":1,"index":0,"token":5,"bytes":88,"detail":""}
+{"time":35,"sequence":324,"source":"simulator","kind":"network_delivered","node":2,"peer":3,"term":0,"index":0,"token":20,"bytes":53,"detail":"original"}
+{"time":35,"sequence":325,"source":"adapter","kind":"protocol_deliver","node":3,"peer":2,"term":1,"index":0,"token":20,"bytes":53,"detail":""}
+{"time":36,"sequence":326,"source":"simulator","kind":"stale_event","node":1,"peer":0,"term":0,"index":0,"token":3,"bytes":0,"detail":"timer"}
+{"time":36,"sequence":327,"source":"simulator","kind":"storage_completed","node":3,"peer":0,"term":0,"index":0,"token":25,"bytes":88,"detail":"success"}
+{"time":36,"sequence":328,"source":"simulator","kind":"storage_queued","node":3,"peer":0,"term":0,"index":0,"token":26,"bytes":0,"detail":"flush"}
+{"time":36,"sequence":329,"source":"adapter","kind":"persist_flush_queued","node":3,"peer":0,"term":1,"index":0,"token":5,"bytes":88,"detail":""}
+{"time":37,"sequence":330,"source":"simulator","kind":"timer_fired","node":3,"peer":0,"term":0,"index":0,"token":8,"bytes":0,"detail":"heartbeat"}
+{"time":37,"sequence":331,"source":"adapter","kind":"timer_deliver","node":3,"peer":0,"term":1,"index":0,"token":9,"bytes":0,"detail":""}
+{"time":37,"sequence":332,"source":"simulator","kind":"storage_completed","node":3,"peer":0,"term":0,"index":0,"token":26,"bytes":88,"detail":"success"}
+{"time":37,"sequence":333,"source":"adapter","kind":"persist_durable","node":3,"peer":0,"term":1,"index":2,"token":5,"bytes":88,"detail":""}
+{"time":37,"sequence":334,"source":"raft","kind":"storage_complete","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"storage operation completed"}
+{"time":37,"sequence":335,"source":"raft","kind":"commit","node":3,"peer":0,"term":1,"index":2,"token":0,"bytes":0,"detail":"leader durably advanced commit index"}
+{"time":37,"sequence":336,"source":"raft","kind":"apply","node":3,"peer":0,"term":1,"index":2,"token":0,"bytes":0,"detail":"applied client command"}
+{"time":37,"sequence":337,"source":"adapter","kind":"client_reply","node":3,"peer":0,"term":1,"index":2,"token":1,"bytes":0,"detail":"0"}
+{"time":37,"sequence":338,"source":"raft","kind":"client_reply","node":3,"peer":0,"term":1,"index":2,"token":0,"bytes":0,"detail":"client reply emitted"}
+{"time":37,"sequence":339,"source":"raft","kind":"send","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":37,"sequence":340,"source":"simulator","kind":"network_queued","node":3,"peer":1,"term":0,"index":0,"token":21,"bytes":60,"detail":"single"}
+{"time":37,"sequence":341,"source":"adapter","kind":"transport_send","node":3,"peer":1,"term":1,"index":0,"token":0,"bytes":60,"detail":"queued"}
+{"time":37,"sequence":342,"source":"raft","kind":"receive","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message received"}
+{"time":37,"sequence":343,"source":"raft","kind":"send","node":3,"peer":0,"term":1,"index":0,"token":0,"bytes":0,"detail":"protocol message emitted"}
+{"time":37,"sequence":344,"source":"simulator","kind":"network_queued","node":3,"peer":2,"term":0,"index":0,"token":22,"bytes":60,"detail":"single"}
+{"time":37,"sequence":345,"source":"adapter","kind":"transport_send","node":3,"peer":2,"term":1,"index":0,"token":0,"bytes":60,"detail":"queued"}
+{"time":37,"sequence":346,"source":"simulator","kind":"timer_armed","node":3,"peer":0,"term":0,"index":0,"token":9,"bytes":0,"detail":"heartbeat"}
+{"time":37,"sequence":347,"source":"adapter","kind":"timer_mapped","node":3,"peer":0,"term":1,"index":0,"token":10,"bytes":0,"detail":"heartbeat"}
+{"time":37,"sequence":348,"source":"adapter","kind":"client_submit","node":3,"peer":0,"term":1,"index":0,"token":2,"bytes":20,"detail":""}
+{"time":37,"sequence":349,"source":"adapter","kind":"client_reply","node":3,"peer":0,"term":1,"index":2,"token":2,"bytes":0,"detail":"0"}
+{"time":37,"sequence":350,"source":"raft","kind":"client_reply","node":3,"peer":0,"term":1,"index":2,"token":0,"bytes":0,"detail":"client reply emitted"}

@@ -1,0 +1,71 @@
+{
+    "schema":  "detlog-trace-corpus/v1",
+    "generated_at":  "2026-07-12T15:23:35.5758692-07:00",
+    "executable":  "out\\reportable\\detlog-sim.exe",
+    "build_commit":  "0a21224f245a2526b03140071eab6ce076add91a",
+    "traces":  [
+                   {
+                       "scenario":  "leader-crash",
+                       "nodes":  3,
+                       "seed":  42,
+                       "file":  "leader-crash-restart-3node-seed42.jsonl",
+                       "sha256":  "00be8c2ecbbf8571d176b2fc2ce3f74b950787403798214604f0e0a6c19ae5ec"
+                   },
+                   {
+                       "scenario":  "leader-crash",
+                       "nodes":  5,
+                       "seed":  84,
+                       "file":  "leader-crash-restart-5node-seed84.jsonl",
+                       "sha256":  "7cdf5331b7f8001b117d5bdd07f4c646c2553fbfc5e6bfc568b776729d69d3de"
+                   },
+                   {
+                       "scenario":  "symmetric-partition",
+                       "nodes":  3,
+                       "seed":  43,
+                       "file":  "symmetric-partition-3node-seed43.jsonl",
+                       "sha256":  "50e7b94c98dfd7ed41398b73781ba00258616f53abfefa2cbd036a4c5d6e218f"
+                   },
+                   {
+                       "scenario":  "asymmetric-partition",
+                       "nodes":  5,
+                       "seed":  44,
+                       "file":  "asymmetric-partition-5node-seed44.jsonl",
+                       "sha256":  "384cd6fb5bacbb4ede7ad75df35722f4dfe722297bc8ee9565c991f289465d43"
+                   },
+                   {
+                       "scenario":  "ambiguous-retry",
+                       "nodes":  3,
+                       "seed":  45,
+                       "file":  "ambiguous-retry-3node-seed45.jsonl",
+                       "sha256":  "16cf57145190e0558ce953bf1cfa570a305b4cc7cee0e8be605ca321f48728af"
+                   },
+                   {
+                       "scenario":  "torn-wal",
+                       "nodes":  3,
+                       "seed":  46,
+                       "file":  "torn-wal-3node-seed46.jsonl",
+                       "sha256":  "e2e7d09bfa224709725a7556546681608fc52725cf389cb0e262a768f30a5c77"
+                   },
+                   {
+                       "scenario":  "slow-follower",
+                       "nodes":  5,
+                       "seed":  47,
+                       "file":  "slow-follower-5node-seed47.jsonl",
+                       "sha256":  "8d184652b6c281b061366eba2e8cefba3bf027af58ea85f4fd2264b5c4cf299a"
+                   },
+                   {
+                       "scenario":  "slow-disk",
+                       "nodes":  3,
+                       "seed":  48,
+                       "file":  "slow-disk-3node-seed48.jsonl",
+                       "sha256":  "d71f2c14bab6edafc9b9d7037d7cfbb2e3340af840a36d136890fcd011fc3e58"
+                   },
+                   {
+                       "scenario":  "saturation",
+                       "nodes":  3,
+                       "seed":  49,
+                       "file":  "saturation-3node-seed49.jsonl",
+                       "sha256":  "2dc7097aeb0d9dd08dfe7df19a8e2218b2f0beb65e47655bb5d484d4d5e40604"
+                   }
+               ]
+}
