@@ -34,10 +34,11 @@ Scenario behavior:
   ticks and then heals it. TCP mode uses a real bidirectional transport cut for
   `--partition-ms` wall-clock milliseconds (default 1000), records its measured
   duration, and keeps the run alive through the complete interval. Both modes
-  require replacement election while the cut is still active and a later
-  successful post-fault commit; otherwise the run exits nonzero. The separate
-  recovery metric therefore shows whether that first success arrived before or
-  after healing without redefining the one-second cut.
+  require a different ready leader and a later successful post-fault commit
+  before the bounded run ends; otherwise the run exits nonzero. The separate
+  fault and recovery durations show whether replacement readiness and the first
+  success arrived before or after healing without redefining the one-second
+  cut.
 - `slow-follower` adds deterministic bidirectional delay to one simulated
   follower while keeping election bounds large enough to avoid turning the
   scenario into continuous elections.
@@ -159,6 +160,13 @@ before the bounded run ended. `recovery_to_first_success` remains separate and
 normally includes election plus replication, WAL durability, application, and
 reply delivery. Healthy and slow-path scenarios emit both fault fields as
 `null`.
+
+A partition run is complete only after the configured cut was held for its
+full duration, a different ready leader was observed, and a later command
+completed successfully. The replacement may become ready before or after the
+cut heals. Compare `replacement_leader_ready_duration` with `fault_duration` to
+distinguish those outcomes; rejecting post-heal readiness would censor slow
+recovery observations from the reported distribution.
 
 All loops have finite event/deadline and retry bounds. A run that cannot finish
 emits `timeout`/`not_started` operation records, a `bounded_timeout` summary,

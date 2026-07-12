@@ -128,9 +128,16 @@ struct RunSummary {
     return false;
   }
   if (options.scenario != "partition") return true;
-  return summary.fault_duration &&
-         *summary.replacement_leader_ready_duration <=
-             *summary.fault_duration;
+  if (!summary.fault_duration) return false;
+  if (options.mode == "tcp") {
+    const std::uint64_t requested_duration_ns =
+        options.partition_ms * 1'000'000ULL;
+    if (*summary.fault_duration < requested_duration_ns) return false;
+  }
+  // A replacement observed after healing is a valid slow-recovery sample.
+  // Rejecting it would censor the tail of the recovery distribution even
+  // though the full cut occurred and the cluster subsequently recovered.
+  return true;
 }
 
 [[nodiscard]] std::uint64_t parse_unsigned(std::string_view text,
