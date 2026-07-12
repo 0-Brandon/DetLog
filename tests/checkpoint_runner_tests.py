@@ -301,6 +301,41 @@ class CheckpointRunnerTests(unittest.TestCase):
             self.assertEqual(
                 json.loads(target.read_text(encoding="ascii")), {"value": 2}
             )
+            delete_descriptor = runner.open_regular_fd(
+                target, os.O_RDONLY, "test state deletion"
+            )
+
+            def release_delete() -> None:
+                time.sleep(0.1)
+                os.close(delete_descriptor)
+
+            delete_closer = threading.Thread(target=release_delete)
+            delete_closer.start()
+            try:
+                runner.unlink_with_retry(target)
+            finally:
+                delete_closer.join()
+            self.assertFalse(target.exists())
+
+            tree = Path(temporary) / "tree"
+            tree.mkdir()
+            held = tree / "held.txt"
+            held.write_bytes(b"held")
+            tree_descriptor = runner.open_regular_fd(
+                held, os.O_RDONLY, "test tree deletion"
+            )
+
+            def release_tree() -> None:
+                time.sleep(0.1)
+                os.close(tree_descriptor)
+
+            tree_closer = threading.Thread(target=release_tree)
+            tree_closer.start()
+            try:
+                runner.rmtree_with_retry(tree)
+            finally:
+                tree_closer.join()
+            self.assertFalse(tree.exists())
 
     def test_artifact_validator_enforces_order_and_seed(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

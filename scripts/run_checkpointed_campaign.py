@@ -334,6 +334,48 @@ def replace_atomic(source: Path, destination: Path) -> None:
     raise CampaignError(f"cannot atomically replace {destination}")
 
 
+def unlink_with_retry(path: Path, missing_ok: bool = False) -> None:
+    delay = 0.01
+    attempts = 50 if os.name == "nt" else 1
+    for attempt in range(attempts):
+        try:
+            path.unlink(missing_ok=missing_ok)
+            return
+        except FileNotFoundError:
+            if missing_ok:
+                return
+            raise
+        except OSError as error:
+            if (
+                os.name != "nt"
+                or getattr(error, "winerror", None) not in {5, 32, 33}
+                or attempt == attempts - 1
+            ):
+                raise
+            time.sleep(delay)
+            delay = min(delay * 1.5, 0.2)
+
+
+def rmtree_with_retry(path: Path) -> None:
+    delay = 0.01
+    attempts = 50 if os.name == "nt" else 1
+    for attempt in range(attempts):
+        if not path.exists():
+            return
+        try:
+            shutil.rmtree(path)
+            return
+        except OSError as error:
+            if (
+                os.name != "nt"
+                or getattr(error, "winerror", None) not in {5, 32, 33}
+                or attempt == attempts - 1
+            ):
+                raise
+            time.sleep(delay)
+            delay = min(delay * 1.5, 0.2)
+
+
 def write_atomic_bytes(path: Path, value: bytes) -> None:
     require_real_directory(path.parent, "atomic-write parent")
     descriptor, temporary_name = tempfile.mkstemp(
@@ -351,7 +393,7 @@ def write_atomic_bytes(path: Path, value: bytes) -> None:
     finally:
         if descriptor >= 0:
             os.close(descriptor)
-        temporary.unlink(missing_ok=True)
+        unlink_with_retry(temporary, missing_ok=True)
 
 
 def write_atomic_json(path: Path, value: dict[str, Any]) -> None:
@@ -1095,7 +1137,7 @@ def quarantine_uncommitted_tails(
             "stderr_observed_bytes": error_size,
         },
     )
-    os.replace(temporary, destination)
+    replace_atomic(temporary, destination)
     fsync_directory(destination.parent)
     truncate_durably(raw, raw_offset)
     truncate_durably(errors, error_offset)
@@ -1136,7 +1178,7 @@ def safe_remove_transaction(output: Path, transaction: Path) -> None:
     if resolved.parent != root:
         raise CampaignError("refusing to remove a transaction outside its root")
     require_real_directory(transaction, "transaction cleanup target")
-    shutil.rmtree(transaction)
+    rmtree_with_retry(transaction)
 
 
 def quarantine_transaction(
@@ -1149,7 +1191,7 @@ def quarantine_transaction(
         f"{output.name}-run-{ordinal}-{reason}-"
         f"{datetime.now().strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:8]}"
     )
-    os.replace(transaction, destination)
+    replace_atomic(transaction, destination)
     fsync_directory(root)
     return destination
 
@@ -1216,7 +1258,7 @@ def cleanup_owned_temp(base_value: Any, owned_value: Any) -> None:
         ".detlog-campaign-"
     ):
         raise CampaignError("runner-owned benchmark temp directory escapes its root")
-    shutil.rmtree(owned)
+    rmtree_with_retry(owned)
 
 
 def cleanup_benchmark_temp(active: dict[str, Any]) -> None:
@@ -1419,7 +1461,7 @@ def inspect_active_transaction(
 
     if ordinal <= committed_runs:
         cleanup_benchmark_temp(active)
-        active_path.unlink(missing_ok=True)
+        unlink_with_retry(active_path, missing_ok=True)
         safe_remove_transaction(output, transaction)
         return None
     if ordinal != committed_runs + 1:
@@ -1466,7 +1508,7 @@ def inspect_active_transaction(
     reason = "acknowledged-ambiguous"
     cleanup_benchmark_temp(active)
     destination = quarantine_transaction(output, transaction, reason, ordinal)
-    active_path.unlink(missing_ok=True)
+    unlink_with_retry(active_path, missing_ok=True)
     print(f"Quarantined {reason} transaction: {destination}", flush=True)
     return None
 
@@ -1589,7 +1631,7 @@ def initialize_campaign(
 ) -> tuple[dict[str, Any], dict[str, Any], bytes]:
     for temporary in output.glob(".detlog-write-*.tmp"):
         require_regular_file(temporary, "stale bootstrap temporary")
-        temporary.unlink()
+        unlink_with_retry(temporary)
     executable_sha = sha256_file(executable)
     environment_sha = sha256_file(environment_source)
     expected_bootstrap = bootstrap_value(
@@ -1659,14 +1701,14 @@ def initialize_campaign(
             sha256_bytes(b""),
         )
         write_atomic_json(checkpoint_path, checkpoint)
-    bootstrap_path.unlink(missing_ok=True)
+    unlink_with_retry(bootstrap_path, missing_ok=True)
     return bindings, checkpoint, chain
 
 
 def cleanup_stale_atomic_temporaries(output: Path) -> None:
     for temporary in output.glob(".detlog-write-*.tmp"):
         require_regular_file(temporary, "stale atomic temporary")
-        temporary.unlink()
+        unlink_with_retry(temporary)
 
 
 def completion_value(
@@ -1798,7 +1840,7 @@ def commit_transaction(
     )
     write_atomic_json(checkpoint_path, checkpoint)
     cleanup_benchmark_temp(active)
-    active_path.unlink(missing_ok=True)
+    unlink_with_retry(active_path, missing_ok=True)
     safe_remove_transaction(output, transaction)
     return planned.ordinal, chain, checkpoint
 
@@ -1966,8 +2008,8 @@ def run_campaign(
                     environment_sha,
                 )
                 verify_completion(definition, bindings, output, complete_path)
-                checkpoint_path.unlink(missing_ok=True)
-                bootstrap_path.unlink(missing_ok=True)
+                unlink_with_retry(checkpoint_path, missing_ok=True)
+                unlink_with_retry(bootstrap_path, missing_ok=True)
                 print(f"Campaign is already complete: {output}", flush=True)
                 return
 
@@ -2015,7 +2057,7 @@ def run_campaign(
                 committed_runs, chain = verify_checkpoint_and_recover(
                     output, definition, bindings, checkpoint, raw, errors
                 )
-                bootstrap_path.unlink(missing_ok=True)
+                unlink_with_retry(bootstrap_path, missing_ok=True)
 
             recovered = inspect_active_transaction(
                 args,
@@ -2051,8 +2093,8 @@ def run_campaign(
                 complete_path,
                 completion_value(definition, bindings, checkpoint, output),
             )
-            checkpoint_path.unlink(missing_ok=True)
-            active_path.unlink(missing_ok=True)
+            unlink_with_retry(checkpoint_path, missing_ok=True)
+            unlink_with_retry(active_path, missing_ok=True)
         else:
             new_runs = 0
             for planned in definition.plan[committed_runs:]:
@@ -2110,8 +2152,8 @@ def run_campaign(
                     complete_path,
                     completion_value(definition, bindings, checkpoint, output),
                 )
-                checkpoint_path.unlink(missing_ok=True)
-                active_path.unlink(missing_ok=True)
+                unlink_with_retry(checkpoint_path, missing_ok=True)
+                unlink_with_retry(active_path, missing_ok=True)
                 print(f"Benchmark artifacts: {output}", flush=True)
 
 
