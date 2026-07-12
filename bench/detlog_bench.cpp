@@ -41,6 +41,18 @@ namespace {
 
 using Clock = std::chrono::steady_clock;
 
+constexpr std::uint64_t kTcpDeadlineBaseMs = 30'000ULL;
+constexpr std::uint64_t kTcpDeadlinePerOperationMs = 500ULL;
+constexpr std::uint64_t kTcpDeadlineMaximumMs = 600'000ULL;
+
+[[nodiscard]] std::uint64_t tcp_measurement_deadline_ms(
+    std::size_t operations) noexcept {
+  return std::min<std::uint64_t>(
+      kTcpDeadlineMaximumMs,
+      kTcpDeadlineBaseMs + static_cast<std::uint64_t>(operations) *
+                               kTcpDeadlinePerOperationMs);
+}
+
 struct Options {
   std::string mode{"sim"};
   std::string scenario{"healthy"};
@@ -322,10 +334,7 @@ void emit_manifest(std::ostream& output, const Options& options,
           : 100'000ULL +
                 static_cast<std::uint64_t>(options.operations) * 20'000ULL;
   const std::uint64_t tcp_deadline_ms =
-      std::min<std::uint64_t>(
-          300'000ULL,
-          30'000ULL +
-              static_cast<std::uint64_t>(options.operations) * 100ULL);
+      tcp_measurement_deadline_ms(options.operations);
   output << "{\"record\":\"manifest\",\"schema\":1,\"timestamp_epoch_ms\":"
          << timestamp << ",\"os\":";
   json_string(output, operating_system());
@@ -1027,10 +1036,7 @@ void merge_runtime_metrics(RunSummary& summary,
   std::optional<Clock::time_point> partition_heal_at;
   detlog::NodeHostMetrics crashed_metrics;
   const std::uint64_t timeout_scale =
-      std::min<std::uint64_t>(300'000ULL,
-                              30'000ULL +
-                                  static_cast<std::uint64_t>(options.operations) *
-                                      100ULL);
+      tcp_measurement_deadline_ms(options.operations);
   const auto deadline = benchmark_start +
                         std::chrono::milliseconds(timeout_scale);
   constexpr auto kAttemptTimeout = std::chrono::seconds(2);

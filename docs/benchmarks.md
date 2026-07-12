@@ -123,7 +123,10 @@ Only the initial ready-leader election is warmed before timing; there are zero
 excluded workload operations, so caches, WAL growth, and state-machine work are
 cold at the first measured command. The manifest labels this policy and records
 the simulator event bound or TCP wall-clock deadline that ends an incomplete
-measurement. Election counts still include the observed initial leader and any
+measurement. The TCP deadline is `30 s + 500 ms * operations`, capped at ten
+minutes; this remains finite while accommodating sustained flush-per-command
+storage rather than treating a slow but progressing durable run as failed.
+Election counts still include the observed initial leader and any
 replacements. Simulator runs make one final invariant check. TCP summaries
 point to the runtime integration tests rather than claiming an online
 independent safety oracle.
