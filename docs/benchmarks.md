@@ -34,8 +34,10 @@ Scenario behavior:
   ticks and then heals it. TCP mode uses a real bidirectional transport cut for
   `--partition-ms` wall-clock milliseconds (default 1000), records its measured
   duration, and keeps the run alive through the complete interval. Both modes
-  require replacement election and a later successful commit while the cut is
-  still active; otherwise the run exits nonzero.
+  require replacement election while the cut is still active and a later
+  successful post-fault commit; otherwise the run exits nonzero. The separate
+  recovery metric therefore shows whether that first success arrived before or
+  after healing without redefining the one-second cut.
 - `slow-follower` adds deterministic bidirectional delay to one simulated
   follower while keeping election bounds large enough to avoid turning the
   scenario into continuous elections.

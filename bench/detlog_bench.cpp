@@ -116,6 +116,23 @@ struct RunSummary {
   std::size_t sim_storage_bytes_high_water{};
 };
 
+[[nodiscard]] bool fault_was_exercised(const Options& options,
+                                       bool fault_injected,
+                                       const RunSummary& summary) noexcept {
+  if (options.scenario != "leader-crash" &&
+      options.scenario != "partition") {
+    return true;
+  }
+  if (!fault_injected || !summary.replacement_leader_ready_duration ||
+      !summary.recovery_to_first_success) {
+    return false;
+  }
+  if (options.scenario != "partition") return true;
+  return summary.fault_duration &&
+         *summary.replacement_leader_ready_duration <=
+             *summary.fault_duration;
+}
+
 [[nodiscard]] std::uint64_t parse_unsigned(std::string_view text,
                                            std::string_view option) {
   std::uint64_t value{};
@@ -824,14 +841,7 @@ void abandon_sim_attempts(std::vector<SimClient>& clients,
   summary.elections = observed_leaders.size();
   const detlog::InvariantResult invariant = cluster.check_invariants();
   const bool fault_exercised =
-      (options.scenario != "leader-crash" && options.scenario != "partition") ||
-      (fault_injected && summary.replacement_leader_ready_duration &&
-       summary.recovery_to_first_success &&
-       (options.scenario != "partition" ||
-        (partition_healed && summary.fault_duration &&
-         *summary.replacement_leader_ready_duration <=
-             *summary.fault_duration &&
-         *summary.recovery_to_first_success <= *summary.fault_duration)));
+      fault_was_exercised(options, fault_injected, summary);
   summary.safety_check = invariant ? "passed" : "failed";
   if (!invariant) summary.status = "invariant_failure";
   if (summary.failures != 0 && invariant) {
@@ -1246,14 +1256,7 @@ void merge_runtime_metrics(RunSummary& summary,
   }
   merge_runtime_metrics(summary, crashed_metrics);
   const bool fault_exercised =
-      (options.scenario != "leader-crash" && options.scenario != "partition") ||
-      (fault_injected && summary.replacement_leader_ready_duration &&
-       summary.recovery_to_first_success &&
-       (options.scenario != "partition" ||
-        (partition_healed && summary.fault_duration &&
-         *summary.replacement_leader_ready_duration <=
-             *summary.fault_duration &&
-         *summary.recovery_to_first_success <= *summary.fault_duration)));
+      fault_was_exercised(options, fault_injected, summary);
   if (summary.failures != 0) {
     summary.status = "bounded_timeout";
   } else if (!fault_exercised) {
