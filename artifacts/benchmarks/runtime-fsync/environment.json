@@ -1,0 +1,22 @@
+{
+    "schema":  "detlog-benchmark-environment/v1",
+    "captured_at":  "2026-07-12T15:48:49.2106318-07:00",
+    "machine_scope":  "single local Windows workstation",
+    "cpu":  "13th Gen Intel(R) Core(TM) i5-13500",
+    "logical_processors":  20,
+    "physical_memory_bytes":  34083512320,
+    "os_product":  "Windows 10 Pro",
+    "os_display_version":  "23H2",
+    "os_build":  "22631.3374",
+    "power_scheme":  "Power Scheme GUID: 381b4222-f694-41f0-9685-ff5bb260df2e  (Balanced)",
+    "temp_directory":  "D:\\Users\\meiwang\\Documents\\DetLog\\out\\benchmark-temp",
+    "storage_description":  "D: Windows Storage Space; benchmark TEMP/TMP forced to D:\\Users\\meiwang\\Documents\\DetLog\\out\\benchmark-temp",
+    "storage_inventory":  "SCSI\\Disk\u0026Ven_Samsung\u0026Prod_SSD_870_EVO_2TB\\4\u002611742ca2\u00260\u0026040000\r\nSCSI\\Disk\u0026Ven_Samsung\u0026Prod_SSD_860_EVO_1TB\\4\u002611742ca2\u00260\u0026050000\r\nSCSI\\Disk\u0026Ven_\u0026Prod_ST4000VN008-2DR1\\4\u002611742ca2\u00260\u0026060000\r\nSCSI\\Disk\u0026Ven_\u0026Prod_ST4000VN008-2DR1\\4\u002611742ca2\u00260\u0026070000\r\nSTORAGE\\Disk\\{1b44c7e9-7a5f-4c7c-ba59-ea762676ca56}\r\nSCSI\\Disk\u0026Ven_Seagate\u0026Prod_BUP_BK\\6\u00261a5e25c8\u00260\u0026000000",
+    "compiler_path":  "C:\\msys64\\mingw64\\bin\\g++.exe",
+    "compiler_version":  "g++.exe (Rev1, Built by MSYS2 project) 11.3.0\r\nCopyright (C) 2021 Free Software Foundation, Inc.\r\nThis is free software; see the source for copying conditions.  There is NO\r\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+    "build_flags":  "g++ 11.3.0 -std=c++20 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow",
+    "build_commit":  "25638317094f5a451d7715e301b375e37d87bbb6",
+    "worktree":  "clean",
+    "timezone":  "Pacific Standard Time",
+    "notes":  "Reportable campaigns run sequentially on AC power under a process-scoped ES_CONTINUOUS|ES_SYSTEM_REQUIRED sleep guard; the guard is released after each bounded chunk. Windows Balanced power plan retained. No persistent power settings changed."
+}

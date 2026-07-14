@@ -4,6 +4,9 @@ The benchmark harness measures DetLog against itself under controlled workload
 and fault configurations. It is not a production-database comparison and its
 numbers must not be presented as such.
 
+The completed reportable campaign, three-trial variability, and interpretation
+limits are published in [Reportable benchmark results](benchmark-results.md).
+
 Every run writes newline-delimited JSON to stdout. Redirect that stream to a
 new file and retain it as the raw result; diagnostics go to stderr.
 
@@ -294,13 +297,13 @@ Run repeated size/policy matrices:
 ```sh
 ENVIRONMENT=out/benchmark-environment.json \
 scripts/run_wal_bench_matrix.sh build/release/detlog-wal-bench \
-  bench-results/wal-smoke 3
+  bench-results/wal-campaign 3
 ```
 
 ```powershell
 scripts\run_wal_bench_matrix.ps1 `
   -Executable build\release\detlog-wal-bench.exe `
-  -OutputDirectory bench-results\wal-smoke -Repetitions 3 `
+  -OutputDirectory bench-results\wal-campaign -Repetitions 3 `
   -Environment out\benchmark-environment.json
 ```
 

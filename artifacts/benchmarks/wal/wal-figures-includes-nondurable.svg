@@ -1,0 +1,399 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2130" height="1056" viewBox="0 0 2130 1056">
+<defs><pattern id="unsafeHatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#fee2e2"/><line x1="0" y1="0" x2="0" y2="8" stroke="#b91c1c" stroke-width="4"/></pattern></defs>
+<rect width="100%" height="100%" fill="white"/>
+<style>text{font-family:system-ui,sans-serif;fill:#111827}.small{font-size:10px}.axis{stroke:#9ca3af;stroke-width:1}.grid{stroke:#d1d5db;stroke-width:1;opacity:.6}</style>
+<text x="20" y="30" font-size="21" font-weight="700">DetLog WAL benchmark — durable and nondurable policies kept distinct</text>
+<rect x="20" y="42" width="2090" height="34" rx="4" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+<text x="32" y="64" font-size="14" font-weight="800" fill="#991b1b">UNSAFE / NONDURABLE APPEND ACKNOWLEDGEMENTS: unsafe-no-flush append throughput does not measure crash-safe commits</text>
+<text x="24" y="92" font-size="11">P1: source=raw-includes-nondurable.jsonl.gz | os=windows | compiler=gcc 11.3.0 | C++=202002 | hw_threads=20 | commit=25638317094f5a451d7715e301b375e37d87bbb6 | flags=g++ 11.3.0 -std=c++20 -O3 -DNDEBUG -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow<title>raw-includes-nondurable.jsonl.gz</title></text>
+<text x="105" y="123" font-size="17" font-weight="700">Append throughput (trial means with min–max whiskers; final unsafe flush excluded)</text>
+<text transform="translate(22,328.5) rotate(-90)" text-anchor="middle" font-size="12">entries / second</text>
+<line class="axis" x1="105" y1="141" x2="105" y2="516"/>
+<line class="axis" x1="105" y1="516" x2="2085" y2="516"/>
+<line class="grid" x1="105" y1="516.0" x2="2085" y2="516.0"/>
+<text class="small" text-anchor="end" x="97" y="519.0">0</text>
+<line class="grid" x1="105" y1="441.0" x2="2085" y2="441.0"/>
+<text class="small" text-anchor="end" x="97" y="444.0">19.1k</text>
+<line class="grid" x1="105" y1="366.0" x2="2085" y2="366.0"/>
+<text class="small" text-anchor="end" x="97" y="369.0">38.1k</text>
+<line class="grid" x1="105" y1="291.0" x2="2085" y2="291.0"/>
+<text class="small" text-anchor="end" x="97" y="294.0">57.2k</text>
+<line class="grid" x1="105" y1="216.0" x2="2085" y2="216.0"/>
+<text class="small" text-anchor="end" x="97" y="219.0">76.2k</text>
+<line class="grid" x1="105" y1="141.0" x2="2085" y2="141.0"/>
+<text class="small" text-anchor="end" x="97" y="144.0">95.3k</text>
+<rect x="117" y="515.88" width="34" height="0.12" fill="#2563eb" stroke="#065f46" stroke-width="2"><title>P1 | entries=100 | payload=64 B | flush every append | trials=3 | mean=31.5707 entries/s | min=31.143 | max=32.04</title></rect>
+<line x1="134" y1="515.87" x2="134" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<line x1="128" y1="515.87" x2="140" y2="515.87" stroke="#111827" stroke-width="1.5"/>
+<line x1="128" y1="515.88" x2="140" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(121,528) rotate(58)">P1 e100 p64 F</text>
+<rect x="172" y="515.08" width="34" height="0.92" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=100 | payload=64 B | group(8) | trials=3 | mean=233.814 entries/s | min=226.463 | max=243.352</title></rect>
+<line x1="189" y1="515.04" x2="189" y2="515.11" stroke="#111827" stroke-width="1.5"/>
+<line x1="183" y1="515.04" x2="195" y2="515.04" stroke="#111827" stroke-width="1.5"/>
+<line x1="183" y1="515.11" x2="195" y2="515.11" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(176,528) rotate(58)">P1 e100 p64 G8</text>
+<rect x="227" y="513.18" width="34" height="2.82" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=100 | payload=64 B | group(32) | trials=3 | mean=715.587 entries/s | min=665.593 | max=769.475</title></rect>
+<line x1="244" y1="512.97" x2="244" y2="513.38" stroke="#111827" stroke-width="1.5"/>
+<line x1="238" y1="512.97" x2="250" y2="512.97" stroke="#111827" stroke-width="1.5"/>
+<line x1="238" y1="513.38" x2="250" y2="513.38" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(231,528) rotate(58)">P1 e100 p64 G32</text>
+<rect x="282" y="192.72" width="34" height="323.28" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=100 | payload=64 B | UNSAFE: no flush during append | trials=3 | mean=82132.9 entries/s | min=57254.1 | max=95274.4</title></rect>
+<line x1="299" y1="141.00" x2="299" y2="290.65" stroke="#111827" stroke-width="1.5"/>
+<line x1="293" y1="141.00" x2="305" y2="141.00" stroke="#111827" stroke-width="1.5"/>
+<line x1="293" y1="290.65" x2="305" y2="290.65" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(286,528) rotate(58)">P1 e100 p64 UNSAFE</text>
+<rect x="337" y="515.88" width="34" height="0.12" fill="#2563eb" stroke="#065f46" stroke-width="2"><title>P1 | entries=100 | payload=1024 B | flush every append | trials=3 | mean=29.9377 entries/s | min=26.229 | max=32.246</title></rect>
+<line x1="354" y1="515.87" x2="354" y2="515.90" stroke="#111827" stroke-width="1.5"/>
+<line x1="348" y1="515.87" x2="360" y2="515.87" stroke="#111827" stroke-width="1.5"/>
+<line x1="348" y1="515.90" x2="360" y2="515.90" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(341,528) rotate(58)">P1 e100 p1024 F</text>
+<rect x="392" y="515.12" width="34" height="0.88" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=100 | payload=1024 B | group(8) | trials=3 | mean=222.313 entries/s | min=203.478 | max=231.921</title></rect>
+<line x1="409" y1="515.09" x2="409" y2="515.20" stroke="#111827" stroke-width="1.5"/>
+<line x1="403" y1="515.09" x2="415" y2="515.09" stroke="#111827" stroke-width="1.5"/>
+<line x1="403" y1="515.20" x2="415" y2="515.20" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(396,528) rotate(58)">P1 e100 p1024 G8</text>
+<rect x="447" y="513.54" width="34" height="2.46" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=100 | payload=1024 B | group(32) | trials=3 | mean=624.299 entries/s | min=588.174 | max=662.017</title></rect>
+<line x1="464" y1="513.39" x2="464" y2="513.68" stroke="#111827" stroke-width="1.5"/>
+<line x1="458" y1="513.39" x2="470" y2="513.39" stroke="#111827" stroke-width="1.5"/>
+<line x1="458" y1="513.68" x2="470" y2="513.68" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(451,528) rotate(58)">P1 e100 p1024 G32</text>
+<rect x="502" y="312.97" width="34" height="203.03" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=100 | payload=1024 B | UNSAFE: no flush during append | trials=3 | mean=51581.6 entries/s | min=48253.2 | max=53564.7</title></rect>
+<line x1="519" y1="305.17" x2="519" y2="326.08" stroke="#111827" stroke-width="1.5"/>
+<line x1="513" y1="305.17" x2="525" y2="305.17" stroke="#111827" stroke-width="1.5"/>
+<line x1="513" y1="326.08" x2="525" y2="326.08" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(506,528) rotate(58)">P1 e100 p1024 UNSAFE</text>
+<rect x="557" y="515.88" width="34" height="0.12" fill="#2563eb" stroke="#065f46" stroke-width="2"><title>P1 | entries=100 | payload=8192 B | flush every append | trials=3 | mean=31.433 entries/s | min=31.143 | max=31.813</title></rect>
+<line x1="574" y1="515.87" x2="574" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<line x1="568" y1="515.87" x2="580" y2="515.87" stroke="#111827" stroke-width="1.5"/>
+<line x1="568" y1="515.88" x2="580" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(561,528) rotate(58)">P1 e100 p8192 F</text>
+<rect x="612" y="515.28" width="34" height="0.72" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=100 | payload=8192 B | group(8) | trials=3 | mean=182.775 entries/s | min=148.921 | max=207.579</title></rect>
+<line x1="629" y1="515.18" x2="629" y2="515.41" stroke="#111827" stroke-width="1.5"/>
+<line x1="623" y1="515.18" x2="635" y2="515.18" stroke="#111827" stroke-width="1.5"/>
+<line x1="623" y1="515.41" x2="635" y2="515.41" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(616,528) rotate(58)">P1 e100 p8192 G8</text>
+<rect x="667" y="513.91" width="34" height="2.09" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=100 | payload=8192 B | group(32) | trials=3 | mean=530.223 entries/s | min=416.663 | max=588.009</title></rect>
+<line x1="684" y1="513.69" x2="684" y2="514.36" stroke="#111827" stroke-width="1.5"/>
+<line x1="678" y1="513.69" x2="690" y2="513.69" stroke="#111827" stroke-width="1.5"/>
+<line x1="678" y1="514.36" x2="690" y2="514.36" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(671,528) rotate(58)">P1 e100 p8192 G32</text>
+<rect x="722" y="471.40" width="34" height="44.60" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=100 | payload=8192 B | UNSAFE: no flush during append | trials=3 | mean=11332 entries/s | min=8285.9 | max=12856.1</title></rect>
+<line x1="739" y1="465.40" x2="739" y2="483.39" stroke="#111827" stroke-width="1.5"/>
+<line x1="733" y1="465.40" x2="745" y2="465.40" stroke="#111827" stroke-width="1.5"/>
+<line x1="733" y1="483.39" x2="745" y2="483.39" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(726,528) rotate(58)">P1 e100 p8192 UNSAFE</text>
+<rect x="777" y="515.89" width="34" height="0.11" fill="#2563eb" stroke="#065f46" stroke-width="2"><title>P1 | entries=1000 | payload=64 B | flush every append | trials=3 | mean=29.135 entries/s | min=28.792 | max=29.603</title></rect>
+<line x1="794" y1="515.88" x2="794" y2="515.89" stroke="#111827" stroke-width="1.5"/>
+<line x1="788" y1="515.88" x2="800" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<line x1="788" y1="515.89" x2="800" y2="515.89" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(781,528) rotate(58)">P1 e1000 p64 F</text>
+<rect x="832" y="515.08" width="34" height="0.92" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=1000 | payload=64 B | group(8) | trials=3 | mean=232.847 entries/s | min=223.468 | max=238.044</title></rect>
+<line x1="849" y1="515.06" x2="849" y2="515.12" stroke="#111827" stroke-width="1.5"/>
+<line x1="843" y1="515.06" x2="855" y2="515.06" stroke="#111827" stroke-width="1.5"/>
+<line x1="843" y1="515.12" x2="855" y2="515.12" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(836,528) rotate(58)">P1 e1000 p64 G8</text>
+<rect x="887" y="512.44" width="34" height="3.56" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=1000 | payload=64 B | group(32) | trials=3 | mean=903.85 entries/s | min=874.258 | max=928.561</title></rect>
+<line x1="904" y1="512.35" x2="904" y2="512.56" stroke="#111827" stroke-width="1.5"/>
+<line x1="898" y1="512.35" x2="910" y2="512.35" stroke="#111827" stroke-width="1.5"/>
+<line x1="898" y1="512.56" x2="910" y2="512.56" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(891,528) rotate(58)">P1 e1000 p64 G32</text>
+<rect x="942" y="303.96" width="34" height="212.04" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=1000 | payload=64 B | UNSAFE: no flush during append | trials=3 | mean=53872.9 entries/s | min=51207.5 | max=56912.9</title></rect>
+<line x1="959" y1="291.99" x2="959" y2="314.45" stroke="#111827" stroke-width="1.5"/>
+<line x1="953" y1="291.99" x2="965" y2="291.99" stroke="#111827" stroke-width="1.5"/>
+<line x1="953" y1="314.45" x2="965" y2="314.45" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(946,528) rotate(58)">P1 e1000 p64 UNSAFE</text>
+<rect x="997" y="515.88" width="34" height="0.12" fill="#2563eb" stroke="#065f46" stroke-width="2"><title>P1 | entries=1000 | payload=1024 B | flush every append | trials=3 | mean=30.201 entries/s | min=30.102 | max=30.392</title></rect>
+<line x1="1014" y1="515.88" x2="1014" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<line x1="1008" y1="515.88" x2="1020" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<line x1="1008" y1="515.88" x2="1020" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1001,528) rotate(58)">P1 e1000 p1024 F</text>
+<rect x="1052" y="515.09" width="34" height="0.91" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=1000 | payload=1024 B | group(8) | trials=3 | mean=231.957 entries/s | min=227.657 | max=236.58</title></rect>
+<line x1="1069" y1="515.07" x2="1069" y2="515.10" stroke="#111827" stroke-width="1.5"/>
+<line x1="1063" y1="515.07" x2="1075" y2="515.07" stroke="#111827" stroke-width="1.5"/>
+<line x1="1063" y1="515.10" x2="1075" y2="515.10" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1056,528) rotate(58)">P1 e1000 p1024 G8</text>
+<rect x="1107" y="512.73" width="34" height="3.27" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=1000 | payload=1024 B | group(32) | trials=3 | mean=829.706 entries/s | min=810.317 | max=849.887</title></rect>
+<line x1="1124" y1="512.65" x2="1124" y2="512.81" stroke="#111827" stroke-width="1.5"/>
+<line x1="1118" y1="512.65" x2="1130" y2="512.65" stroke="#111827" stroke-width="1.5"/>
+<line x1="1118" y1="512.81" x2="1130" y2="512.81" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1111,528) rotate(58)">P1 e1000 p1024 G32</text>
+<rect x="1162" y="309.55" width="34" height="206.45" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=1000 | payload=1024 B | UNSAFE: no flush during append | trials=3 | mean=52450.6 entries/s | min=44744.5 | max=56605.9</title></rect>
+<line x1="1179" y1="293.20" x2="1179" y2="339.89" stroke="#111827" stroke-width="1.5"/>
+<line x1="1173" y1="293.20" x2="1185" y2="293.20" stroke="#111827" stroke-width="1.5"/>
+<line x1="1173" y1="339.89" x2="1185" y2="339.89" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1166,528) rotate(58)">P1 e1000 p1024 UNSAFE</text>
+<rect x="1217" y="515.88" width="34" height="0.12" fill="#2563eb" stroke="#065f46" stroke-width="2"><title>P1 | entries=1000 | payload=8192 B | flush every append | trials=3 | mean=30.6497 entries/s | min=30.496 | max=30.816</title></rect>
+<line x1="1234" y1="515.88" x2="1234" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<line x1="1228" y1="515.88" x2="1240" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<line x1="1228" y1="515.88" x2="1240" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1221,528) rotate(58)">P1 e1000 p8192 F</text>
+<rect x="1272" y="515.05" width="34" height="0.95" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=1000 | payload=8192 B | group(8) | trials=3 | mean=240.796 entries/s | min=234.81 | max=249.18</title></rect>
+<line x1="1289" y1="515.02" x2="1289" y2="515.08" stroke="#111827" stroke-width="1.5"/>
+<line x1="1283" y1="515.02" x2="1295" y2="515.02" stroke="#111827" stroke-width="1.5"/>
+<line x1="1283" y1="515.08" x2="1295" y2="515.08" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1276,528) rotate(58)">P1 e1000 p8192 G8</text>
+<rect x="1327" y="512.95" width="34" height="3.05" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=1000 | payload=8192 B | group(32) | trials=3 | mean=774.539 entries/s | min=766.68 | max=778.505</title></rect>
+<line x1="1344" y1="512.94" x2="1344" y2="512.98" stroke="#111827" stroke-width="1.5"/>
+<line x1="1338" y1="512.94" x2="1350" y2="512.94" stroke="#111827" stroke-width="1.5"/>
+<line x1="1338" y1="512.98" x2="1350" y2="512.98" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1331,528) rotate(58)">P1 e1000 p8192 G32</text>
+<rect x="1382" y="465.60" width="34" height="50.40" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=1000 | payload=8192 B | UNSAFE: no flush during append | trials=3 | mean=12804 entries/s | min=12603.7 | max=12978.6</title></rect>
+<line x1="1399" y1="464.92" x2="1399" y2="466.39" stroke="#111827" stroke-width="1.5"/>
+<line x1="1393" y1="464.92" x2="1405" y2="464.92" stroke="#111827" stroke-width="1.5"/>
+<line x1="1393" y1="466.39" x2="1405" y2="466.39" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1386,528) rotate(58)">P1 e1000 p8192 UNSAFE</text>
+<rect x="1437" y="515.88" width="34" height="0.12" fill="#2563eb" stroke="#065f46" stroke-width="2"><title>P1 | entries=5000 | payload=64 B | flush every append | trials=3 | mean=29.7397 entries/s | min=29.468 | max=30.025</title></rect>
+<line x1="1454" y1="515.88" x2="1454" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<line x1="1448" y1="515.88" x2="1460" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<line x1="1448" y1="515.88" x2="1460" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1441,528) rotate(58)">P1 e5000 p64 F</text>
+<rect x="1492" y="515.07" width="34" height="0.93" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=5000 | payload=64 B | group(8) | trials=3 | mean=237.407 entries/s | min=236.279 | max=238.798</title></rect>
+<line x1="1509" y1="515.06" x2="1509" y2="515.07" stroke="#111827" stroke-width="1.5"/>
+<line x1="1503" y1="515.06" x2="1515" y2="515.06" stroke="#111827" stroke-width="1.5"/>
+<line x1="1503" y1="515.07" x2="1515" y2="515.07" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1496,528) rotate(58)">P1 e5000 p64 G8</text>
+<rect x="1547" y="512.46" width="34" height="3.54" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=5000 | payload=64 B | group(32) | trials=3 | mean=899.228 entries/s | min=790.672 | max=961.472</title></rect>
+<line x1="1564" y1="512.22" x2="1564" y2="512.89" stroke="#111827" stroke-width="1.5"/>
+<line x1="1558" y1="512.22" x2="1570" y2="512.22" stroke="#111827" stroke-width="1.5"/>
+<line x1="1558" y1="512.89" x2="1570" y2="512.89" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1551,528) rotate(58)">P1 e5000 p64 G32</text>
+<rect x="1602" y="462.06" width="34" height="53.94" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=5000 | payload=64 B | UNSAFE: no flush during append | trials=3 | mean=13704.8 entries/s | min=13642.1 | max=13767.1</title></rect>
+<line x1="1619" y1="461.81" x2="1619" y2="462.30" stroke="#111827" stroke-width="1.5"/>
+<line x1="1613" y1="461.81" x2="1625" y2="461.81" stroke="#111827" stroke-width="1.5"/>
+<line x1="1613" y1="462.30" x2="1625" y2="462.30" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1606,528) rotate(58)">P1 e5000 p64 UNSAFE</text>
+<rect x="1657" y="515.88" width="34" height="0.12" fill="#2563eb" stroke="#065f46" stroke-width="2"><title>P1 | entries=5000 | payload=1024 B | flush every append | trials=3 | mean=30.922 entries/s | min=30.608 | max=31.12</title></rect>
+<line x1="1674" y1="515.88" x2="1674" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<line x1="1668" y1="515.88" x2="1680" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<line x1="1668" y1="515.88" x2="1680" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1661,528) rotate(58)">P1 e5000 p1024 F</text>
+<rect x="1712" y="515.04" width="34" height="0.96" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=5000 | payload=1024 B | group(8) | trials=3 | mean=243.477 entries/s | min=242.007 | max=244.628</title></rect>
+<line x1="1729" y1="515.04" x2="1729" y2="515.05" stroke="#111827" stroke-width="1.5"/>
+<line x1="1723" y1="515.04" x2="1735" y2="515.04" stroke="#111827" stroke-width="1.5"/>
+<line x1="1723" y1="515.05" x2="1735" y2="515.05" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1716,528) rotate(58)">P1 e5000 p1024 G8</text>
+<rect x="1767" y="512.33" width="34" height="3.67" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=5000 | payload=1024 B | group(32) | trials=3 | mean=931.509 entries/s | min=859.155 | max=969.454</title></rect>
+<line x1="1784" y1="512.18" x2="1784" y2="512.62" stroke="#111827" stroke-width="1.5"/>
+<line x1="1778" y1="512.18" x2="1790" y2="512.18" stroke="#111827" stroke-width="1.5"/>
+<line x1="1778" y1="512.62" x2="1790" y2="512.62" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1771,528) rotate(58)">P1 e5000 p1024 G32</text>
+<rect x="1822" y="390.35" width="34" height="125.65" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=5000 | payload=1024 B | UNSAFE: no flush during append | trials=3 | mean=31924.2 entries/s | min=31319.9 | max=32411.3</title></rect>
+<line x1="1839" y1="388.43" x2="1839" y2="392.72" stroke="#111827" stroke-width="1.5"/>
+<line x1="1833" y1="388.43" x2="1845" y2="388.43" stroke="#111827" stroke-width="1.5"/>
+<line x1="1833" y1="392.72" x2="1845" y2="392.72" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1826,528) rotate(58)">P1 e5000 p1024 UNSAFE</text>
+<rect x="1877" y="515.88" width="34" height="0.12" fill="#2563eb" stroke="#065f46" stroke-width="2"><title>P1 | entries=5000 | payload=8192 B | flush every append | trials=3 | mean=31.1637 entries/s | min=31.051 | max=31.348</title></rect>
+<line x1="1894" y1="515.88" x2="1894" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<line x1="1888" y1="515.88" x2="1900" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<line x1="1888" y1="515.88" x2="1900" y2="515.88" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1881,528) rotate(58)">P1 e5000 p8192 F</text>
+<rect x="1932" y="515.06" width="34" height="0.94" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=5000 | payload=8192 B | group(8) | trials=3 | mean=238.758 entries/s | min=234.935 | max=245.057</title></rect>
+<line x1="1949" y1="515.04" x2="1949" y2="515.08" stroke="#111827" stroke-width="1.5"/>
+<line x1="1943" y1="515.04" x2="1955" y2="515.04" stroke="#111827" stroke-width="1.5"/>
+<line x1="1943" y1="515.08" x2="1955" y2="515.08" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1936,528) rotate(58)">P1 e5000 p8192 G8</text>
+<rect x="1987" y="512.87" width="34" height="3.13" fill="#059669" stroke="#065f46" stroke-width="2"><title>P1 | entries=5000 | payload=8192 B | group(32) | trials=3 | mean=795.244 entries/s | min=781.066 | max=816.869</title></rect>
+<line x1="2004" y1="512.78" x2="2004" y2="512.93" stroke="#111827" stroke-width="1.5"/>
+<line x1="1998" y1="512.78" x2="2010" y2="512.78" stroke="#111827" stroke-width="1.5"/>
+<line x1="1998" y1="512.93" x2="2010" y2="512.93" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(1991,528) rotate(58)">P1 e5000 p8192 G32</text>
+<rect x="2042" y="473.76" width="34" height="42.24" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=5000 | payload=8192 B | UNSAFE: no flush during append | trials=3 | mean=10731.3 entries/s | min=10417.3 | max=11051.8</title></rect>
+<line x1="2059" y1="472.50" x2="2059" y2="475.00" stroke="#111827" stroke-width="1.5"/>
+<line x1="2053" y1="472.50" x2="2065" y2="472.50" stroke="#111827" stroke-width="1.5"/>
+<line x1="2053" y1="475.00" x2="2065" y2="475.00" stroke="#111827" stroke-width="1.5"/>
+<text class="small" transform="translate(2046,528) rotate(58)">P1 e5000 p8192 UNSAFE</text>
+<text x="105" y="593" font-size="17" font-weight="700">Reopen scan time vs WAL file size (trial means with min–max whiskers)</text>
+<text transform="translate(22,798.5) rotate(-90)" text-anchor="middle" font-size="12">reopen scan milliseconds</text>
+<line class="axis" x1="105" y1="611" x2="105" y2="986"/>
+<line class="axis" x1="105" y1="986" x2="2085" y2="986"/>
+<line class="grid" x1="105" y1="986.0" x2="2085" y2="986.0"/>
+<text class="small" text-anchor="end" x="97" y="989.0">0</text>
+<line class="grid" x1="105" y1="911.0" x2="2085" y2="911.0"/>
+<text class="small" text-anchor="end" x="97" y="914.0">98.2</text>
+<line class="grid" x1="105" y1="836.0" x2="2085" y2="836.0"/>
+<text class="small" text-anchor="end" x="97" y="839.0">196</text>
+<line class="grid" x1="105" y1="761.0" x2="2085" y2="761.0"/>
+<text class="small" text-anchor="end" x="97" y="764.0">295</text>
+<line class="grid" x1="105" y1="686.0" x2="2085" y2="686.0"/>
+<text class="small" text-anchor="end" x="97" y="689.0">393</text>
+<line class="grid" x1="105" y1="611.0" x2="2085" y2="611.0"/>
+<text class="small" text-anchor="end" x="97" y="614.0">491</text>
+<line class="grid" x1="105.0" y1="611" x2="105.0" y2="986"/>
+<text class="small" text-anchor="middle" x="105.0" y="1004">0</text>
+<line class="grid" x1="501.0" y1="611" x2="501.0" y2="986"/>
+<text class="small" text-anchor="middle" x="501.0" y="1004">7.96</text>
+<line class="grid" x1="897.0" y1="611" x2="897.0" y2="986"/>
+<text class="small" text-anchor="middle" x="897.0" y="1004">15.9</text>
+<line class="grid" x1="1293.0" y1="611" x2="1293.0" y2="986"/>
+<text class="small" text-anchor="middle" x="1293.0" y="1004">23.9</text>
+<line class="grid" x1="1689.0" y1="611" x2="1689.0" y2="986"/>
+<text class="small" text-anchor="middle" x="1689.0" y="1004">31.8</text>
+<line class="grid" x1="2085.0" y1="611" x2="2085.0" y2="986"/>
+<text class="small" text-anchor="middle" x="2085.0" y="1004">39.8</text>
+<text x="1095.0" y="1025" text-anchor="middle" font-size="12">WAL file size (MiB)</text>
+<line x1="106.02" y1="980.34" x2="106.02" y2="980.34" stroke="#111827" stroke-width="1.5"/>
+<line x1="106.02" y1="979.57" x2="106.02" y2="981.00" stroke="#111827" stroke-width="1.5"/>
+<circle cx="106.02" cy="980.34" r="7" fill="#2563eb" stroke="#111827" stroke-width="2"><title>P1 | entries=100 | payload=64 B | flush every append | trials=3 | mean file=21561 B [21561, 21561] | mean scan=7.41167 ms [6.5487, 8.4161]</title></circle>
+<text class="small" x="115.02" y="973.34">P1</text>
+<line x1="106.02" y1="980.29" x2="106.02" y2="980.29" stroke="#111827" stroke-width="1.5"/>
+<line x1="106.02" y1="979.66" x2="106.02" y2="980.65" stroke="#111827" stroke-width="1.5"/>
+<circle cx="106.02" cy="980.29" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=100 | payload=64 B | group(8) | trials=3 | mean file=21561 B [21561, 21561] | mean scan=7.48003 ms [7.0031, 8.3041]</title></circle>
+<text class="small" x="115.02" y="973.29">P1</text>
+<line x1="106.02" y1="980.26" x2="106.02" y2="980.26" stroke="#111827" stroke-width="1.5"/>
+<line x1="106.02" y1="978.99" x2="106.02" y2="981.06" stroke="#111827" stroke-width="1.5"/>
+<circle cx="106.02" cy="980.26" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=100 | payload=64 B | group(32) | trials=3 | mean file=21561 B [21561, 21561] | mean scan=7.5224 ms [6.464, 9.1829]</title></circle>
+<text class="small" x="115.02" y="973.26">P1</text>
+<line x1="106.02" y1="979.37" x2="106.02" y2="979.37" stroke="#991b1b" stroke-width="1.5"/>
+<line x1="106.02" y1="976.79" x2="106.02" y2="980.97" stroke="#991b1b" stroke-width="1.5"/>
+<circle cx="106.02" cy="979.37" r="7" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=100 | payload=64 B | UNSAFE: no flush during append | trials=3 | mean file=21561 B [21561, 21561] | mean scan=8.6851 ms [6.5824, 12.0573]</title></circle>
+<text class="small" x="115.02" y="972.37">P1</text>
+<line x1="100.02" y1="973.37" x2="112.02" y2="985.37" stroke="#991b1b" stroke-width="2"/>
+<line x1="112.02" y1="973.37" x2="100.02" y2="985.37" stroke="#991b1b" stroke-width="2"/>
+<line x1="110.58" y1="979.34" x2="110.58" y2="979.34" stroke="#111827" stroke-width="1.5"/>
+<line x1="110.58" y1="978.08" x2="110.58" y2="980.51" stroke="#111827" stroke-width="1.5"/>
+<circle cx="110.58" cy="979.34" r="7" fill="#2563eb" stroke="#111827" stroke-width="2"><title>P1 | entries=100 | payload=1024 B | flush every append | trials=3 | mean file=117561 B [117561, 117561] | mean scan=8.7209 ms [7.1906, 10.3748]</title></circle>
+<text class="small" x="119.58" y="972.34">P1</text>
+<line x1="110.58" y1="979.66" x2="110.58" y2="979.66" stroke="#111827" stroke-width="1.5"/>
+<line x1="110.58" y1="978.30" x2="110.58" y2="980.55" stroke="#111827" stroke-width="1.5"/>
+<circle cx="110.58" cy="979.66" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=100 | payload=1024 B | group(8) | trials=3 | mean file=117561 B [117561, 117561] | mean scan=8.3048 ms [7.1358, 10.0851]</title></circle>
+<text class="small" x="119.58" y="972.66">P1</text>
+<line x1="110.58" y1="978.77" x2="110.58" y2="978.77" stroke="#111827" stroke-width="1.5"/>
+<line x1="110.58" y1="978.12" x2="110.58" y2="979.83" stroke="#111827" stroke-width="1.5"/>
+<circle cx="110.58" cy="978.77" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=100 | payload=1024 B | group(32) | trials=3 | mean file=117561 B [117561, 117561] | mean scan=9.47147 ms [8.0753, 10.3141]</title></circle>
+<text class="small" x="119.58" y="971.77">P1</text>
+<line x1="110.58" y1="978.31" x2="110.58" y2="978.31" stroke="#991b1b" stroke-width="1.5"/>
+<line x1="110.58" y1="978.14" x2="110.58" y2="978.54" stroke="#991b1b" stroke-width="1.5"/>
+<circle cx="110.58" cy="978.31" r="7" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=100 | payload=1024 B | UNSAFE: no flush during append | trials=3 | mean file=117561 B [117561, 117561] | mean scan=10.0696 ms [9.7667, 10.2967]</title></circle>
+<text class="small" x="119.58" y="971.31">P1</text>
+<line x1="104.58" y1="972.31" x2="116.58" y2="984.31" stroke="#991b1b" stroke-width="2"/>
+<line x1="116.58" y1="972.31" x2="104.58" y2="984.31" stroke="#991b1b" stroke-width="2"/>
+<line x1="144.60" y1="968.36" x2="144.60" y2="968.36" stroke="#111827" stroke-width="1.5"/>
+<line x1="144.60" y1="961.79" x2="144.60" y2="973.55" stroke="#111827" stroke-width="1.5"/>
+<circle cx="144.60" cy="968.36" r="7" fill="#2563eb" stroke="#111827" stroke-width="2"><title>P1 | entries=100 | payload=8192 B | flush every append | trials=3 | mean file=834361 B [834361, 834361] | mean scan=23.1039 ms [16.3077, 31.7091]</title></circle>
+<text class="small" x="153.60" y="961.36">P1</text>
+<line x1="144.60" y1="969.62" x2="144.60" y2="969.62" stroke="#111827" stroke-width="1.5"/>
+<line x1="144.60" y1="966.32" x2="144.60" y2="973.20" stroke="#111827" stroke-width="1.5"/>
+<circle cx="144.60" cy="969.62" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=100 | payload=8192 B | group(8) | trials=3 | mean file=834361 B [834361, 834361] | mean scan=21.449 ms [16.7616, 25.7767]</title></circle>
+<text class="small" x="153.60" y="962.62">P1</text>
+<line x1="144.60" y1="972.21" x2="144.60" y2="972.21" stroke="#111827" stroke-width="1.5"/>
+<line x1="144.60" y1="968.25" x2="144.60" y2="974.69" stroke="#111827" stroke-width="1.5"/>
+<circle cx="144.60" cy="972.21" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=100 | payload=8192 B | group(32) | trials=3 | mean file=834361 B [834361, 834361] | mean scan=18.0572 ms [14.8116, 23.247]</title></circle>
+<text class="small" x="153.60" y="965.21">P1</text>
+<line x1="144.60" y1="972.58" x2="144.60" y2="972.58" stroke="#991b1b" stroke-width="1.5"/>
+<line x1="144.60" y1="968.15" x2="144.60" y2="975.16" stroke="#991b1b" stroke-width="1.5"/>
+<circle cx="144.60" cy="972.58" r="7" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=100 | payload=8192 B | UNSAFE: no flush during append | trials=3 | mean file=834361 B [834361, 834361] | mean scan=17.5801 ms [14.1992, 23.3794]</title></circle>
+<text class="small" x="153.60" y="965.58">P1</text>
+<line x1="138.60" y1="966.58" x2="150.60" y2="978.58" stroke="#991b1b" stroke-width="2"/>
+<line x1="150.60" y1="966.58" x2="138.60" y2="978.58" stroke="#991b1b" stroke-width="2"/>
+<line x1="115.21" y1="964.48" x2="115.21" y2="964.48" stroke="#111827" stroke-width="1.5"/>
+<line x1="115.21" y1="962.96" x2="115.21" y2="966.58" stroke="#111827" stroke-width="1.5"/>
+<circle cx="115.21" cy="964.48" r="7" fill="#2563eb" stroke="#111827" stroke-width="2"><title>P1 | entries=1000 | payload=64 B | flush every append | trials=3 | mean file=215061 B [215061, 215061] | mean scan=28.1836 ms [25.4294, 30.1777]</title></circle>
+<text class="small" x="124.21" y="957.48">P1</text>
+<line x1="115.21" y1="960.30" x2="115.21" y2="960.30" stroke="#111827" stroke-width="1.5"/>
+<line x1="115.21" y1="958.14" x2="115.21" y2="961.63" stroke="#111827" stroke-width="1.5"/>
+<circle cx="115.21" cy="960.30" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=1000 | payload=64 B | group(8) | trials=3 | mean file=215061 B [215061, 215061] | mean scan=33.6541 ms [31.9187, 36.479]</title></circle>
+<text class="small" x="124.21" y="953.30">P1</text>
+<line x1="115.21" y1="960.74" x2="115.21" y2="960.74" stroke="#111827" stroke-width="1.5"/>
+<line x1="115.21" y1="959.45" x2="115.21" y2="962.82" stroke="#111827" stroke-width="1.5"/>
+<circle cx="115.21" cy="960.74" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=1000 | payload=64 B | group(32) | trials=3 | mean file=215061 B [215061, 215061] | mean scan=33.0831 ms [30.3593, 34.7646]</title></circle>
+<text class="small" x="124.21" y="953.74">P1</text>
+<line x1="115.21" y1="966.17" x2="115.21" y2="966.17" stroke="#991b1b" stroke-width="1.5"/>
+<line x1="115.21" y1="965.84" x2="115.21" y2="966.68" stroke="#991b1b" stroke-width="1.5"/>
+<circle cx="115.21" cy="966.17" r="7" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=1000 | payload=64 B | UNSAFE: no flush during append | trials=3 | mean file=215061 B [215061, 215061] | mean scan=25.9663 ms [25.3, 26.4046]</title></circle>
+<text class="small" x="124.21" y="959.17">P1</text>
+<line x1="109.21" y1="960.17" x2="121.21" y2="972.17" stroke="#991b1b" stroke-width="2"/>
+<line x1="121.21" y1="960.17" x2="109.21" y2="972.17" stroke="#991b1b" stroke-width="2"/>
+<line x1="160.77" y1="965.61" x2="160.77" y2="965.61" stroke="#111827" stroke-width="1.5"/>
+<line x1="160.77" y1="963.25" x2="160.77" y2="969.22" stroke="#111827" stroke-width="1.5"/>
+<circle cx="160.77" cy="965.61" r="7" fill="#2563eb" stroke="#111827" stroke-width="2"><title>P1 | entries=1000 | payload=1024 B | flush every append | trials=3 | mean file=1.17506e+06 B [1.17506e+06, 1.17506e+06] | mean scan=26.6973 ms [21.979, 29.7954]</title></circle>
+<text class="small" x="169.77" y="958.61">P1</text>
+<line x1="160.77" y1="967.03" x2="160.77" y2="967.03" stroke="#111827" stroke-width="1.5"/>
+<line x1="160.77" y1="965.68" x2="160.77" y2="969.13" stroke="#111827" stroke-width="1.5"/>
+<circle cx="160.77" cy="967.03" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=1000 | payload=1024 B | group(8) | trials=3 | mean file=1.17506e+06 B [1.17506e+06, 1.17506e+06] | mean scan=24.8391 ms [22.0885, 26.6097]</title></circle>
+<text class="small" x="169.77" y="960.03">P1</text>
+<line x1="160.77" y1="967.88" x2="160.77" y2="967.88" stroke="#111827" stroke-width="1.5"/>
+<line x1="160.77" y1="967.09" x2="160.77" y2="969.07" stroke="#111827" stroke-width="1.5"/>
+<circle cx="160.77" cy="967.88" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=1000 | payload=1024 B | group(32) | trials=3 | mean file=1.17506e+06 B [1.17506e+06, 1.17506e+06] | mean scan=23.7293 ms [22.1697, 24.7639]</title></circle>
+<text class="small" x="169.77" y="960.88">P1</text>
+<line x1="160.77" y1="969.03" x2="160.77" y2="969.03" stroke="#991b1b" stroke-width="1.5"/>
+<line x1="160.77" y1="967.67" x2="160.77" y2="969.83" stroke="#991b1b" stroke-width="1.5"/>
+<circle cx="160.77" cy="969.03" r="7" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=1000 | payload=1024 B | UNSAFE: no flush during append | trials=3 | mean file=1.17506e+06 B [1.17506e+06, 1.17506e+06] | mean scan=22.2248 ms [21.1713, 24.0046]</title></circle>
+<text class="small" x="169.77" y="962.03">P1</text>
+<line x1="154.77" y1="963.03" x2="166.77" y2="975.03" stroke="#991b1b" stroke-width="2"/>
+<line x1="166.77" y1="963.03" x2="154.77" y2="975.03" stroke="#991b1b" stroke-width="2"/>
+<line x1="501.00" y1="923.20" x2="501.00" y2="923.20" stroke="#111827" stroke-width="1.5"/>
+<line x1="501.00" y1="920.88" x2="501.00" y2="925.38" stroke="#111827" stroke-width="1.5"/>
+<circle cx="501.00" cy="923.20" r="7" fill="#2563eb" stroke="#111827" stroke-width="2"><title>P1 | entries=1000 | payload=8192 B | flush every append | trials=3 | mean file=8.34306e+06 B [8.34306e+06, 8.34306e+06] | mean scan=82.2388 ms [79.3808, 85.2748]</title></circle>
+<text class="small" x="510.00" y="916.20">P1</text>
+<line x1="501.00" y1="923.53" x2="501.00" y2="923.53" stroke="#111827" stroke-width="1.5"/>
+<line x1="501.00" y1="922.10" x2="501.00" y2="924.97" stroke="#111827" stroke-width="1.5"/>
+<circle cx="501.00" cy="923.53" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=1000 | payload=8192 B | group(8) | trials=3 | mean file=8.34306e+06 B [8.34306e+06, 8.34306e+06] | mean scan=81.806 ms [79.9254, 83.6801]</title></circle>
+<text class="small" x="510.00" y="916.53">P1</text>
+<line x1="501.00" y1="924.38" x2="501.00" y2="924.38" stroke="#111827" stroke-width="1.5"/>
+<line x1="501.00" y1="923.01" x2="501.00" y2="925.07" stroke="#111827" stroke-width="1.5"/>
+<circle cx="501.00" cy="924.38" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=1000 | payload=8192 B | group(32) | trials=3 | mean file=8.34306e+06 B [8.34306e+06, 8.34306e+06] | mean scan=80.6917 ms [79.7918, 82.4903]</title></circle>
+<text class="small" x="510.00" y="917.38">P1</text>
+<line x1="501.00" y1="922.96" x2="501.00" y2="922.96" stroke="#991b1b" stroke-width="1.5"/>
+<line x1="501.00" y1="922.67" x2="501.00" y2="923.53" stroke="#991b1b" stroke-width="1.5"/>
+<circle cx="501.00" cy="922.96" r="7" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=1000 | payload=8192 B | UNSAFE: no flush during append | trials=3 | mean file=8.34306e+06 B [8.34306e+06, 8.34306e+06] | mean scan=82.554 ms [81.8057, 82.9378]</title></circle>
+<text class="small" x="510.00" y="915.96">P1</text>
+<line x1="495.00" y1="916.96" x2="507.00" y2="928.96" stroke="#991b1b" stroke-width="2"/>
+<line x1="507.00" y1="916.96" x2="495.00" y2="928.96" stroke="#991b1b" stroke-width="2"/>
+<line x1="156.03" y1="846.22" x2="156.03" y2="846.22" stroke="#111827" stroke-width="1.5"/>
+<line x1="156.03" y1="841.13" x2="156.03" y2="852.50" stroke="#111827" stroke-width="1.5"/>
+<circle cx="156.03" cy="846.22" r="7" fill="#2563eb" stroke="#111827" stroke-width="2"><title>P1 | entries=5000 | payload=64 B | flush every append | trials=3 | mean file=1.07506e+06 B [1.07506e+06, 1.07506e+06] | mean scan=183.043 ms [174.825, 189.707]</title></circle>
+<text class="small" x="165.03" y="839.22">P1</text>
+<line x1="156.03" y1="861.45" x2="156.03" y2="861.45" stroke="#111827" stroke-width="1.5"/>
+<line x1="156.03" y1="858.73" x2="156.03" y2="863.76" stroke="#111827" stroke-width="1.5"/>
+<circle cx="156.03" cy="861.45" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=5000 | payload=64 B | group(8) | trials=3 | mean file=1.07506e+06 B [1.07506e+06, 1.07506e+06] | mean scan=163.105 ms [160.081, 166.668]</title></circle>
+<text class="small" x="165.03" y="854.45">P1</text>
+<line x1="156.03" y1="806.77" x2="156.03" y2="806.77" stroke="#111827" stroke-width="1.5"/>
+<line x1="156.03" y1="789.50" x2="156.03" y2="817.68" stroke="#111827" stroke-width="1.5"/>
+<circle cx="156.03" cy="806.77" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=5000 | payload=64 B | group(32) | trials=3 | mean file=1.07506e+06 B [1.07506e+06, 1.07506e+06] | mean scan=234.699 ms [220.416, 257.317]</title></circle>
+<text class="small" x="165.03" y="799.77">P1</text>
+<line x1="156.03" y1="841.33" x2="156.03" y2="841.33" stroke="#991b1b" stroke-width="1.5"/>
+<line x1="156.03" y1="816.46" x2="156.03" y2="855.07" stroke="#991b1b" stroke-width="1.5"/>
+<circle cx="156.03" cy="841.33" r="7" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=5000 | payload=64 B | UNSAFE: no flush during append | trials=3 | mean file=1.07506e+06 B [1.07506e+06, 1.07506e+06] | mean scan=189.443 ms [171.455, 222.016]</title></circle>
+<text class="small" x="165.03" y="834.33">P1</text>
+<line x1="150.03" y1="835.33" x2="162.03" y2="847.33" stroke="#991b1b" stroke-width="2"/>
+<line x1="162.03" y1="835.33" x2="150.03" y2="847.33" stroke="#991b1b" stroke-width="2"/>
+<line x1="383.86" y1="862.61" x2="383.86" y2="862.61" stroke="#111827" stroke-width="1.5"/>
+<line x1="383.86" y1="860.59" x2="383.86" y2="864.53" stroke="#111827" stroke-width="1.5"/>
+<circle cx="383.86" cy="862.61" r="7" fill="#2563eb" stroke="#111827" stroke-width="2"><title>P1 | entries=5000 | payload=1024 B | flush every append | trials=3 | mean file=5.87506e+06 B [5.87506e+06, 5.87506e+06] | mean scan=161.585 ms [159.063, 164.227]</title></circle>
+<text class="small" x="392.86" y="855.61">P1</text>
+<line x1="383.86" y1="865.13" x2="383.86" y2="865.13" stroke="#111827" stroke-width="1.5"/>
+<line x1="383.86" y1="858.70" x2="383.86" y2="868.37" stroke="#111827" stroke-width="1.5"/>
+<circle cx="383.86" cy="865.13" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=5000 | payload=1024 B | group(8) | trials=3 | mean file=5.87506e+06 B [5.87506e+06, 5.87506e+06] | mean scan=158.277 ms [154.037, 166.704]</title></circle>
+<text class="small" x="392.86" y="858.13">P1</text>
+<line x1="383.86" y1="870.02" x2="383.86" y2="870.02" stroke="#111827" stroke-width="1.5"/>
+<line x1="383.86" y1="869.25" x2="383.86" y2="871.39" stroke="#111827" stroke-width="1.5"/>
+<circle cx="383.86" cy="870.02" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=5000 | payload=1024 B | group(32) | trials=3 | mean file=5.87506e+06 B [5.87506e+06, 5.87506e+06] | mean scan=151.884 ms [150.081, 152.884]</title></circle>
+<text class="small" x="392.86" y="863.02">P1</text>
+<line x1="383.86" y1="863.27" x2="383.86" y2="863.27" stroke="#991b1b" stroke-width="1.5"/>
+<line x1="383.86" y1="855.07" x2="383.86" y2="868.49" stroke="#991b1b" stroke-width="1.5"/>
+<circle cx="383.86" cy="863.27" r="7" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=5000 | payload=1024 B | UNSAFE: no flush during append | trials=3 | mean file=5.87506e+06 B [5.87506e+06, 5.87506e+06] | mean scan=160.719 ms [153.882, 171.46]</title></circle>
+<text class="small" x="392.86" y="856.27">P1</text>
+<line x1="377.86" y1="857.27" x2="389.86" y2="869.27" stroke="#991b1b" stroke-width="2"/>
+<line x1="389.86" y1="857.27" x2="377.86" y2="869.27" stroke="#991b1b" stroke-width="2"/>
+<line x1="2085.00" y1="621.53" x2="2085.00" y2="621.53" stroke="#111827" stroke-width="1.5"/>
+<line x1="2085.00" y1="611.00" x2="2085.00" y2="632.71" stroke="#111827" stroke-width="1.5"/>
+<circle cx="2085.00" cy="621.53" r="7" fill="#2563eb" stroke="#111827" stroke-width="2"><title>P1 | entries=5000 | payload=8192 B | flush every append | trials=3 | mean file=4.17151e+07 B [4.17151e+07, 4.17151e+07] | mean scan=477.278 ms [462.642, 491.069]</title></circle>
+<text class="small" x="2094.00" y="614.53">P1</text>
+<line x1="2085.00" y1="628.69" x2="2085.00" y2="628.69" stroke="#111827" stroke-width="1.5"/>
+<line x1="2085.00" y1="624.85" x2="2085.00" y2="633.71" stroke="#111827" stroke-width="1.5"/>
+<circle cx="2085.00" cy="628.69" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=5000 | payload=8192 B | group(8) | trials=3 | mean file=4.17151e+07 B [4.17151e+07, 4.17151e+07] | mean scan=467.901 ms [461.336, 472.932]</title></circle>
+<text class="small" x="2094.00" y="621.69">P1</text>
+<line x1="2085.00" y1="634.20" x2="2085.00" y2="634.20" stroke="#111827" stroke-width="1.5"/>
+<line x1="2085.00" y1="629.59" x2="2085.00" y2="637.04" stroke="#111827" stroke-width="1.5"/>
+<circle cx="2085.00" cy="634.20" r="7" fill="#059669" stroke="#111827" stroke-width="2"><title>P1 | entries=5000 | payload=8192 B | group(32) | trials=3 | mean file=4.17151e+07 B [4.17151e+07, 4.17151e+07] | mean scan=460.688 ms [456.974, 466.722]</title></circle>
+<text class="small" x="2094.00" y="627.20">P1</text>
+<line x1="2085.00" y1="635.70" x2="2085.00" y2="635.70" stroke="#991b1b" stroke-width="1.5"/>
+<line x1="2085.00" y1="632.91" x2="2085.00" y2="640.50" stroke="#991b1b" stroke-width="1.5"/>
+<circle cx="2085.00" cy="635.70" r="7" fill="url(#unsafeHatch)" stroke="#991b1b" stroke-width="2"><title>P1 | entries=5000 | payload=8192 B | UNSAFE: no flush during append | trials=3 | mean file=4.17151e+07 B [4.17151e+07, 4.17151e+07] | mean scan=458.718 ms [452.433, 462.38]</title></circle>
+<text class="small" x="2094.00" y="628.70">P1</text>
+<line x1="2079.00" y1="629.70" x2="2091.00" y2="641.70" stroke="#991b1b" stroke-width="2"/>
+<line x1="2091.00" y1="629.70" x2="2079.00" y2="641.70" stroke="#991b1b" stroke-width="2"/>
+<rect x="105" y="1018" width="16" height="12" fill="#2563eb"/><text x="127" y="1028" font-size="11">flush-every (durable)</text>
+<rect x="295" y="1018" width="16" height="12" fill="#059669"/><text x="317" y="1028" font-size="11">group flush (durable)</text>
+<rect x="495" y="1018" width="16" height="12" fill="url(#unsafeHatch)" stroke="#991b1b"/><text x="517" y="1028" font-size="11" font-weight="800" fill="#991b1b">UNSAFE no-flush during append</text>
+</svg>
