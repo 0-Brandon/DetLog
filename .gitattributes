@@ -1,0 +1,3 @@
+# Published artifact checksums cover exact bytes; never normalize line endings.
+# CRLF is intentional in captured Windows files and is not trailing whitespace.
+artifacts/** -text whitespace=cr-at-eol

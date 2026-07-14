@@ -1,53 +1,74 @@
-# Representative generated evidence
+# Published evidence corpus
 
-These files are a small reproducibility corpus, not a performance report. They
-were generated on 2026-07-11 on Windows with MinGW g++ 11.3, C++20, `-O2`, the
-project's strict warning set, and an uncommitted worktree with no Git `HEAD`.
-The benchmark manifests preserve that limitation as
-`uncommitted-worktree-no-head`.
-`SHA256SUMS` covers both traces and the two raw benchmark streams.
+This directory contains the representative deterministic traces and reportable
+benchmark artifacts used by the project documentation. See
+[`docs/benchmark-results.md`](../docs/benchmark-results.md) for analysis and
+interpretation.
 
-## Traces
-
-The trace files capture the built-in leader-crash/replacement/restart scenario:
+`SHA256SUMS` covers every published trace and benchmark file except itself,
+including the per-campaign checksum manifests. Verify it from the repository
+root with:
 
 ```powershell
-detlog-sim.exe --seed 42 --nodes 3 `
-  --trace artifacts\traces\leader-crash-restart-3node-seed42.jsonl
-detlog-sim.exe --seed 84 --nodes 5 `
-  --trace artifacts\traces\leader-crash-restart-5node-seed84.jsonl
+Get-Content artifacts\SHA256SUMS | ForEach-Object {
+  $hash, $path = $_ -split '  ', 2
+  if ((Get-FileHash -Algorithm SHA256 $path).Hash.ToLowerInvariant() -ne $hash) {
+    throw "checksum mismatch: $path"
+  }
+}
 ```
 
-They use `cluster_config(nodes, seed)` defaults. Replay identity is the same
-executable/build, full defaults, action sequence, and seed; byte identity is not
-promised across source, compiler, or standard-library changes.
+## Deterministic traces
 
-## Cluster benchmark smoke matrix
+[`traces/manifest.json`](traces/manifest.json) inventories nine seed-based
+representative failures generated from build
+`0a21224f245a2526b03140071eab6ce076add91a`:
 
-`benchmarks/cluster-smoke` contains all supported simulator/TCP workload cells
-with one trial and two operations per cell:
+| Scenario | Nodes | Seed |
+|---|---:|---:|
+| Leader crash/replacement/restart | 3 | 42 |
+| Leader crash/replacement/restart | 5 | 84 |
+| Symmetric partition | 3 | 43 |
+| Asymmetric partition | 5 | 44 |
+| Ambiguous client retry | 3 | 45 |
+| Torn WAL tail | 3 | 46 |
+| Slow follower | 5 | 47 |
+| Slow disk | 3 | 48 |
+| Queue saturation/backpressure | 3 | 49 |
+
+The manifest records each filename and SHA-256 digest. Replay identity requires
+the same executable/build, seed, cluster defaults, and action sequence. Byte
+identity is not promised across compiler or standard-library changes.
+
+## Reportable benchmarks
+
+All three benchmark packages were produced from clean build commit
+`25638317094f5a451d7715e301b375e37d87bbb6` with GCC 11.3.0, C++20,
+`-O3 -DNDEBUG`, and the strict warning set. Their `environment.json` files
+record the complete machine, OS, compiler, flags, storage, power plan, build,
+and temporary-directory provenance.
+
+| Directory | Coverage | Published data |
+|---|---|---|
+| [`benchmarks/cluster`](benchmarks/cluster) | 432 simulator/TCP runs; 200 operations each; three trials | matrix, environment, compressed raw JSONL, CSV, SVG, checksums |
+| [`benchmarks/runtime-fsync`](benchmarks/runtime-fsync) | 324 loopback TCP runs comparing flush-every and groups 2/5; three trials | matrix, environment, compressed raw JSONL, CSV, SVG, checksums |
+| [`benchmarks/wal`](benchmarks/wal) | 108 WAL append/reopen runs over 100/1,000/5,000 entries and 64 B/1 KiB/8 KiB payloads; three trials | matrix, environment, compressed raw JSONL, CSV, SVG, checksums |
+
+The cluster and runtime raw streams contain a manifest, 200 operation records,
+and a summary for every run. The WAL stream contains paired manifest/summary
+records. Derived CSV/SVG files can be regenerated with the scripts documented
+in [`docs/benchmarks.md`](../docs/benchmarks.md).
+
+Files containing `includes-nondurable` deliberately include the WAL
+`unsafe-no-flush` policy. Its append acknowledgements are not crash-safe; the
+harness performs and separately times a final flush only before reopening.
+Reopen timings use a warm page cache.
+
+Validate the packaged artifacts with:
 
 ```powershell
-scripts\run_bench_matrix.ps1 -Executable .\detlog-bench.exe `
-  -OutputDirectory .\artifacts\benchmarks\cluster-smoke `
-  -Repetitions 1 -Operations 2 -Python python
+python -B scripts\validate_benchmark_artifacts.py `
+  artifacts\benchmarks\cluster `
+  artifacts\benchmarks\runtime-fsync `
+  artifacts\benchmarks\wal
 ```
-
-This is enough to exercise every harness path and generate raw JSONL, CSV, and
-SVG, but one tiny trial cannot support throughput or variability conclusions.
-
-## WAL benchmark smoke matrix
-
-`benchmarks/wal-smoke` covers 10/100 entries, 64/1024-byte payloads,
-flush-every/group-of-four/unsafe-no-flush, and one trial:
-
-```powershell
-scripts\run_wal_bench_matrix.ps1 -Executable .\detlog-wal-bench.exe `
-  -OutputDirectory .\artifacts\benchmarks\wal-smoke -Repetitions 1 `
-  -EntrySizes @(10,100) -PayloadBytes @(64,1024) -GroupSizes @(4) `
-  -Python python
-```
-
-Files containing the unsafe policy say `includes-nondurable` in their names.
-The unsafe append result is not crash-safe; the harness performs a separate
-final flush only before reopening. Reopen timings use a warm page cache.

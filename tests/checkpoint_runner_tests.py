@@ -623,7 +623,7 @@ class CheckpointRunnerTests(unittest.TestCase):
                 )
                 exit_code = runner.run_child_worker(
                     transaction / "worker.json",
-                    Path(sys.executable),
+                    Path(sys.executable).resolve(strict=True),
                     ("-c", f"from pathlib import Path; Path({str(marker)!r}).touch()"),
                 )
             finally:
@@ -656,7 +656,7 @@ class CheckpointRunnerTests(unittest.TestCase):
                 runner.execute_transaction(
                     output,
                     active_path,
-                    Path(sys.executable),
+                    Path(sys.executable).resolve(strict=True),
                     planned,
                     str(temp_root),
                 )

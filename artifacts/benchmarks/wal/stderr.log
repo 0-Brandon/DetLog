@@ -1,0 +1,216 @@
+detlog-wal-bench: policy=flush-every entries=100 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=64 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=64 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=100 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=100 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=64 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=64 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=100 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=100 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=64 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=64 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=100 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=100 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=1024 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=1024 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=100 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=100 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=1024 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=1024 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=100 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=100 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=1024 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=1024 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=100 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=100 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=8192 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=8192 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=100 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=100 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=8192 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=8192 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=100 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=100 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=8192 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=100 payload=8192 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=100 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=1000 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=64 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=64 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=1000 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=1000 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=64 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=64 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=1000 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=1000 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=64 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=64 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=1000 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=1000 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=1024 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=1024 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=1000 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=1000 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=1024 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=1024 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=1000 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=1000 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=1024 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=1024 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=1000 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=1000 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=8192 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=8192 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=1000 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=1000 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=8192 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=8192 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=1000 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=1000 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=8192 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=1000 payload=8192 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=1000 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=5000 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=64 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=64 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=5000 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=5000 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=64 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=64 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=5000 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=5000 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=64 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=64 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=5000 payload=64
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=5000 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=1024 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=1024 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=5000 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=5000 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=1024 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=1024 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=5000 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=5000 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=1024 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=1024 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=5000 payload=1024
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=5000 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=8192 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=8192 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=5000 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=5000 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=8192 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=8192 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=5000 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=flush-every entries=5000 payload=8192
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=8192 group-size=8
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=group entries=5000 payload=8192 group-size=32
+detlog-wal-bench: completed and removed temporary WAL
+detlog-wal-bench: policy=unsafe-no-flush entries=5000 payload=8192
+detlog-wal-bench: completed and removed temporary WAL

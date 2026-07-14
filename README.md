@@ -101,9 +101,11 @@ DETLOG_PROPERTY_SEEDS=2000 build/debug/property_tests
 
 Benchmark methodology, supported fault controls, JSONL fields, matrix runners,
 and figure generation are documented in [docs/benchmarks.md](docs/benchmarks.md).
-The [representative evidence corpus](artifacts/README.md) contains raw 3/5-node
-failure traces and small cluster/WAL benchmark smoke matrices with generated
-CSV/SVG artifacts and reproducibility caveats.
+The [reportable results](docs/benchmark-results.md) analyze the complete
+three-trial cluster, runtime-fsync, and WAL campaigns. The
+[published evidence corpus](artifacts/README.md) contains nine representative
+failure traces plus compressed raw data, CSV/SVG outputs, environment captures,
+and checksums for all three campaigns.
 The [stale-candidate liveness postmortem](docs/postmortems/001-stale-candidate-election-deadlock.md)
 records one bug found by the adversarial histories and the regression that now
 protects it.

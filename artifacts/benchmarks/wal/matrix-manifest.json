@@ -1,0 +1,36 @@
+{
+    "schema": "detlog-wal-bench-matrix/v1",
+    "generated_at": "2026-07-13T17:23:15.552901+00:00",
+    "executable": "D:\\Users\\meiwang\\Documents\\DetLog\\out\\reportable\\detlog-wal-bench.exe",
+    "repetitions": 3,
+    "entry_sizes": [
+        100,
+        1000,
+        5000
+    ],
+    "payload_bytes": [
+        64,
+        1024,
+        8192
+    ],
+    "policies": [
+        "flush-every",
+        "group",
+        "unsafe-no-flush"
+    ],
+    "group_sizes": [
+        8,
+        32
+    ],
+    "expected_runs": 108,
+    "raw_jsonl": "raw-includes-nondurable.jsonl",
+    "diagnostics": "stderr.log",
+    "derived_csv": "summary-includes-nondurable.csv",
+    "derived_svg": "wal-figures-includes-nondurable.svg",
+    "unsafe_policy_note": "UNSAFE: append acknowledgements are nondurable; each run performs and times an explicit final flush before reopen recovery.",
+    "runner": "scripts/run_checkpointed_campaign.py",
+    "runner_commit": "25638317094f5a451d7715e301b375e37d87bbb6",
+    "runner_sha256": "23cdb79919b38ba5cb24a51d87786758c819d5cdf9e2d69ee42f9a69d7a28cbc",
+    "environment": "environment.json",
+    "child_temp_policy": "unique_subdirectory_under_captured_temp"
+}
